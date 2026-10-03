@@ -5,6 +5,7 @@ import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import FloodLayer from "./FloodLayer";
 import FloodedRoadLayer from "./FloodedRoadLayer";
+import LayerControls, { type LayerKey, type LayerVisibility } from "./LayerControls";
 import OriginalRouteLayer from "./OriginalRouteLayer";
 import SafeRouteLayer from "./SafeRouteLayer";
 import StatusPanel from "./StatusPanel";
@@ -24,6 +25,15 @@ export default function MapView() {
   // Set once the style has loaded, so data layers can be added safely.
   const [map, setMap] = useState<maplibregl.Map | null>(null);
   const [route, setRoute] = useState<RouteResponse | null>(null);
+  const [visibility, setVisibility] = useState<LayerVisibility>({
+    flood: true,
+    floodedRoads: true,
+    originalRoute: true,
+    safeRoute: true,
+  });
+
+  const toggleLayer = (key: LayerKey) =>
+    setVisibility((v) => ({ ...v, [key]: !v[key] }));
 
   useEffect(() => {
     let cancelled = false;
@@ -97,13 +107,30 @@ export default function MapView() {
       <div ref={containerRef} style={{ position: "absolute", inset: 0 }} />
       {map && route && (
         <>
-          <FloodLayer map={map} data={route.flood_polygons_geojson} />
-          <OriginalRouteLayer map={map} data={route.original_route_geojson} />
-          <FloodedRoadLayer map={map} data={route.flooded_roads_geojson} />
-          <SafeRouteLayer map={map} data={route.route_geojson} />
+          <FloodLayer
+            map={map}
+            data={route.flood_polygons_geojson}
+            visible={visibility.flood}
+          />
+          <OriginalRouteLayer
+            map={map}
+            data={route.original_route_geojson}
+            visible={visibility.originalRoute}
+          />
+          <FloodedRoadLayer
+            map={map}
+            data={route.flooded_roads_geojson}
+            visible={visibility.floodedRoads}
+          />
+          <SafeRouteLayer
+            map={map}
+            data={route.route_geojson}
+            visible={visibility.safeRoute}
+          />
         </>
       )}
       {route && <StatusPanel data={route} />}
+      <LayerControls visibility={visibility} onToggle={toggleLayer} />
     </>
   );
 }

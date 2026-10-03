@@ -6,15 +6,18 @@ import type { RouteFeature } from "@/lib/api";
 import { LAYER_SLOTS } from "@/lib/config";
 
 const SOURCE_ID = "original-route";
+// Layer ids, bottom to top.
+const LAYER_IDS = ["original-route-casing", "original-route-line"];
 
 type Props = {
   map: Map;
   data: RouteFeature;
+  visible: boolean;
 };
 
 // Pre-flood route as a dashed grey line (architecture.md §9). A dark casing
 // underneath keeps it legible over satellite imagery.
-export default function OriginalRouteLayer({ map, data }: Props) {
+export default function OriginalRouteLayer({ map, data, visible }: Props) {
   useEffect(() => {
     const source = map.getSource<GeoJSONSource>(SOURCE_ID);
     if (source) {
@@ -25,7 +28,7 @@ export default function OriginalRouteLayer({ map, data }: Props) {
     map.addSource(SOURCE_ID, { type: "geojson", data });
     map.addLayer(
       {
-        id: "original-route-casing",
+        id: LAYER_IDS[0],
         type: "line",
         source: SOURCE_ID,
         layout: { "line-join": "round", "line-cap": "round" },
@@ -35,7 +38,7 @@ export default function OriginalRouteLayer({ map, data }: Props) {
     );
     map.addLayer(
       {
-        id: "original-route-line",
+        id: LAYER_IDS[1],
         type: "line",
         source: SOURCE_ID,
         layout: { "line-join": "round" },
@@ -48,6 +51,12 @@ export default function OriginalRouteLayer({ map, data }: Props) {
       LAYER_SLOTS.route,
     );
   }, [map, data]);
+
+  useEffect(() => {
+    for (const id of LAYER_IDS) {
+      map.setLayoutProperty(id, "visibility", visible ? "visible" : "none");
+    }
+  }, [map, visible]);
 
   return null;
 }
