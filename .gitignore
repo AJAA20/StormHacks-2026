@@ -1,0 +1,199 @@
+# =========================
+# macOS
+# =========================
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# macOS resource forks
+._*
+
+# Thumbnail cache
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+
+
+# =========================
+# Python
+# =========================
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+*.egg
+
+# Testing / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Type checking / linting
+.mypy_cache/
+.ruff_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+
+# =========================
+# Node / Next.js
+# =========================
+
+node_modules/
+
+.next/
+out/
+
+# Build artifacts
+dist/
+build/
+
+# Next.js / Vercel
+.vercel/
+
+# npm / yarn / pnpm logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Package manager caches
+.npm/
+.pnpm-store/
+.yarn/cache/
+.yarn/unplugged/
+
+
+# =========================
+# Environment Variables
+# =========================
+
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Python environment variables
+*.env
+
+# Keep an example environment file
+!.env.example
+
+
+# =========================
+# Secrets / Credentials
+# =========================
+
+credentials.json
+secrets.json
+service-account.json
+*.pem
+*.key
+*.p12
+
+
+# =========================
+# IDE / Editor
+# =========================
+
+# VS Code
+.vscode/
+
+# JetBrains / PyCharm
+.idea/
+
+# Vim
+*.swp
+*.swo
+*~
+
+
+# =========================
+# Logs
+# =========================
+
+*.log
+logs/
+
+
+# =========================
+# Temporary Files
+# =========================
+
+tmp/
+temp/
+.cache/
+
+*.tmp
+*.bak
+
+
+# =========================
+# SatRelief Geospatial Data
+# =========================
+
+# Raw satellite imagery can be huge.
+# Do not commit downloaded Sentinel imagery directly.
+data/raw/
+data/sentinel/
+
+# Generated / processed raster files
+data/processed/
+outputs/
+
+# Large raster imagery
+*.tif
+*.tiff
+*.jp2
+
+# Cached OSMnx graphs
+*.graphml
+
+# GeoPackage / spatial database outputs
+*.gpkg
+
+# Shapefile components generated locally
+*.shp
+*.shx
+*.dbf
+*.prj
+*.cpg
+
+# Raster processing auxiliary files
+*.aux.xml
+*.ovr
+
+
+# =========================
+# FastAPI / Local Databases
+# =========================
+
+*.sqlite
+*.sqlite3
+*.db
+
+
+# =========================
+# OS / Miscellaneous
+# =========================
+
+Thumbs.db
+Desktop.ini
