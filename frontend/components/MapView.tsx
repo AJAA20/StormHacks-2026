@@ -9,6 +9,7 @@ import LayerControls, { type LayerKey, type LayerVisibility } from "./LayerContr
 import OriginalRouteLayer from "./OriginalRouteLayer";
 import SafeRouteLayer from "./SafeRouteLayer";
 import ScenarioControls from "./ScenarioControls";
+import StatusBanner from "./StatusBanner";
 import StatusPanel from "./StatusPanel";
 import { getRoute, type RouteResponse, type Scenario } from "@/lib/api";
 import {
@@ -34,8 +35,30 @@ export default function MapView() {
     safeRoute: true,
   });
 
+  // Request state. The previous route stays on screen while a new one loads.
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  // Bumped by Retry to re-run the request for the same scenario.
+  const [attempt, setAttempt] = useState(0);
+
   const toggleLayer = (key: LayerKey) =>
     setVisibility((v) => ({ ...v, [key]: !v[key] }));
+
+  const startRequest = () => {
+    setLoading(true);
+    setError(null);
+  };
+
+  const selectScenario = (next: Scenario) => {
+    if (next === scenario) return;
+    startRequest();
+    setScenario(next);
+  };
+
+  const retry = () => {
+    startRequest();
+    setAttempt((n) => n + 1);
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -43,11 +66,17 @@ export default function MapView() {
       .then((data) => {
         if (!cancelled) setRoute(data);
       })
-      .catch((err) => console.error(err));
+      .catch((err: unknown) => {
+        console.error(err);
+        if (!cancelled) setError(err instanceof Error ? err.message : String(err));
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
     return () => {
       cancelled = true;
     };
-  }, [scenario]);
+  }, [scenario, attempt]);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -133,10 +162,11 @@ export default function MapView() {
       )}
       {route && (
         <StatusPanel data={route}>
-          <ScenarioControls value={scenario} onChange={setScenario} />
+          <ScenarioControls value={scenario} onChange={selectScenario} disabled={loading} />
         </StatusPanel>
       )}
       <LayerControls visibility={visibility} onToggle={toggleLayer} />
+      <StatusBanner loading={loading} error={error} onRetry={retry} />
     </>
   );
 }

@@ -10,10 +10,12 @@ const SCENARIOS: { value: Scenario; label: string }[] = [
 type Props = {
   value: Scenario;
   onChange: (scenario: Scenario) => void;
+  // True while a route request is in flight.
+  disabled?: boolean;
 };
 
 // Flood scenario selector (architecture.md §9).
-export default function ScenarioControls({ value, onChange }: Props) {
+export default function ScenarioControls({ value, onChange, disabled = false }: Props) {
   return (
     <div className={styles.group} role="radiogroup" aria-label="Flood scenario">
       {SCENARIOS.map((s) => (
@@ -22,6 +24,7 @@ export default function ScenarioControls({ value, onChange }: Props) {
           type="button"
           role="radio"
           aria-checked={value === s.value}
+          disabled={disabled}
           className={value === s.value ? styles.active : styles.option}
           onClick={() => onChange(s.value)}
         >
