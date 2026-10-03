@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import type { GeoJSONSource, Map } from "maplibre-gl";
 import type { FloodPolygons } from "@/lib/api";
+import { LAYER_SLOTS } from "@/lib/config";
 
 const SOURCE_ID = "flood";
 
@@ -21,18 +22,24 @@ export default function FloodLayer({ map, data }: Props) {
     }
 
     map.addSource(SOURCE_ID, { type: "geojson", data });
-    map.addLayer({
-      id: "flood-fill",
-      type: "fill",
-      source: SOURCE_ID,
-      paint: { "fill-color": "#3b82f6", "fill-opacity": 0.45 },
-    });
-    map.addLayer({
-      id: "flood-outline",
-      type: "line",
-      source: SOURCE_ID,
-      paint: { "line-color": "#93c5fd", "line-width": 2 },
-    });
+    map.addLayer(
+      {
+        id: "flood-fill",
+        type: "fill",
+        source: SOURCE_ID,
+        paint: { "fill-color": "#3b82f6", "fill-opacity": 0.45 },
+      },
+      LAYER_SLOTS.flood,
+    );
+    map.addLayer(
+      {
+        id: "flood-outline",
+        type: "line",
+        source: SOURCE_ID,
+        paint: { "line-color": "#93c5fd", "line-width": 2 },
+      },
+      LAYER_SLOTS.flood,
+    );
   }, [map, data]);
 
   return null;

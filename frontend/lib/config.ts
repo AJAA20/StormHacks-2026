@@ -18,3 +18,10 @@ export const SATELLITE_TILES =
   "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
 export const SATELLITE_ATTRIBUTION =
   "Imagery © Esri, Maxar, Earthstar Geographics";
+
+// Hidden placeholder layers that fix draw order regardless of which data
+// loads first. Each data layer is inserted beneath its slot (bottom to top).
+export const LAYER_SLOTS = {
+  flood: "slot-flood",
+  route: "slot-route",
+} as const;

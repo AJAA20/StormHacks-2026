@@ -4,9 +4,16 @@ import { useEffect, useRef, useState } from "react";
 import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import FloodLayer from "./FloodLayer";
-import { getFloodPolygons, type FloodPolygons } from "@/lib/api";
+import OriginalRouteLayer from "./OriginalRouteLayer";
+import {
+  getFloodPolygons,
+  getOriginalRoute,
+  type FloodPolygons,
+  type RouteFeature,
+} from "@/lib/api";
 import {
   END_COORDS,
+  LAYER_SLOTS,
   MAP_CENTER,
   MAP_ZOOM,
   SATELLITE_ATTRIBUTION,
@@ -19,12 +26,18 @@ export default function MapView() {
   // Set once the style has loaded, so data layers can be added safely.
   const [map, setMap] = useState<maplibregl.Map | null>(null);
   const [flood, setFlood] = useState<FloodPolygons | null>(null);
+  const [originalRoute, setOriginalRoute] = useState<RouteFeature | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     getFloodPolygons()
       .then((data) => {
         if (!cancelled) setFlood(data);
+      })
+      .catch((err) => console.error(err));
+    getOriginalRoute()
+      .then((data) => {
+        if (!cancelled) setOriginalRoute(data);
       })
       .catch((err) => console.error(err));
     return () => {
@@ -57,6 +70,9 @@ export default function MapView() {
             paint: { "background-color": "#1b2430" },
           },
           { id: "satellite", type: "raster", source: "satellite" },
+          // Draw-order slots: data layers are inserted beneath these.
+          { id: LAYER_SLOTS.flood, type: "background", layout: { visibility: "none" } },
+          { id: LAYER_SLOTS.route, type: "background", layout: { visibility: "none" } },
         ],
       },
     });
@@ -86,6 +102,7 @@ export default function MapView() {
     <>
       <div ref={containerRef} style={{ position: "absolute", inset: 0 }} />
       {map && flood && <FloodLayer map={map} data={flood} />}
+      {map && originalRoute && <OriginalRouteLayer map={map} data={originalRoute} />}
     </>
   );
 }
