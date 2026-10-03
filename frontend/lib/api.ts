@@ -8,6 +8,7 @@ import type {
   MultiPolygon,
   Polygon,
 } from "geojson";
+import type { LngLat } from "./config";
 
 // Flood polygons in EPSG:4326, [longitude, latitude] (architecture.md §6).
 export type FloodPolygons = FeatureCollection<Polygon | MultiPolygon>;
@@ -18,43 +19,44 @@ export type RouteFeature = Feature<LineString>;
 // Road edges that intersect flood polygons (§7 road state FLOODED).
 export type FloodedRoads = FeatureCollection<LineString>;
 
-const MOCK_FLOOD_URL = "/mock/mock_flood.geojson";
-const MOCK_ORIGINAL_ROUTE_URL = "/mock/mock_original_route.geojson";
-const MOCK_FLOODED_ROADS_URL = "/mock/mock_flooded_roads.geojson";
-const MOCK_SAFE_ROUTE_URL = "/mock/mock_safe_route.geojson";
+export type Scenario = "low" | "moderate" | "severe";
 
-export async function getFloodPolygons(): Promise<FloodPolygons> {
-  const res = await fetch(MOCK_FLOOD_URL);
-  if (!res.ok) {
-    throw new Error(`Failed to load flood polygons (${res.status})`);
-  }
-  return res.json();
-}
+// Request body for POST /api/route (§8).
+export type RouteRequest = {
+  start_coords: LngLat;
+  end_coords: LngLat;
+  scenario: Scenario;
+};
 
-// Pre-flood route. Not in the §8 response yet; needs agreeing with Person 3.
-export async function getOriginalRoute(): Promise<RouteFeature> {
-  const res = await fetch(MOCK_ORIGINAL_ROUTE_URL);
-  if (!res.ok) {
-    throw new Error(`Failed to load original route (${res.status})`);
-  }
-  return res.json();
-}
+// Response from POST /api/route: §8 plus the fields proposed to Person 3
+// (start/end_coords, original_route_geojson, flooded_roads_geojson, and
+// flood_mask_geojson renamed to flood_polygons_geojson). Not yet agreed.
+export type RouteResponse = {
+  status: string;
+  scenario: Scenario;
+  route_found: boolean;
+  start_coords: LngLat;
+  end_coords: LngLat;
+  distance_km: number;
+  detour_added_km: number;
+  flooded_edges: number;
+  flooded_edges_avoided: number;
+  route_status: string;
+  route_geojson: RouteFeature;
+  original_route_geojson: RouteFeature;
+  flood_polygons_geojson: FloodPolygons;
+  flooded_roads_geojson: FloodedRoads;
+};
 
-// Flooded road geometries. §8 only returns a count (`flooded_edges`);
-// the geometry needs agreeing with Person 3.
-export async function getFloodedRoads(): Promise<FloodedRoads> {
-  const res = await fetch(MOCK_FLOODED_ROADS_URL);
-  if (!res.ok) {
-    throw new Error(`Failed to load flooded roads (${res.status})`);
-  }
-  return res.json();
-}
+const MOCK_ROUTE_URL = "/mock/mock_route.json";
 
-// Safe evacuation route avoiding flooded roads: `route_geojson` in §8.
-export async function getSafeRoute(): Promise<RouteFeature> {
-  const res = await fetch(MOCK_SAFE_ROUTE_URL);
+// Mock: ignores the request and returns the static response.
+// Backend: POST `request` as JSON to /api/route instead.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function getRoute(request: RouteRequest): Promise<RouteResponse> {
+  const res = await fetch(MOCK_ROUTE_URL);
   if (!res.ok) {
-    throw new Error(`Failed to load safe route (${res.status})`);
+    throw new Error(`Failed to load route (${res.status})`);
   }
   return res.json();
 }

@@ -7,15 +7,7 @@ import FloodLayer from "./FloodLayer";
 import FloodedRoadLayer from "./FloodedRoadLayer";
 import OriginalRouteLayer from "./OriginalRouteLayer";
 import SafeRouteLayer from "./SafeRouteLayer";
-import {
-  getFloodedRoads,
-  getFloodPolygons,
-  getOriginalRoute,
-  getSafeRoute,
-  type FloodedRoads,
-  type FloodPolygons,
-  type RouteFeature,
-} from "@/lib/api";
+import { getRoute, type RouteResponse } from "@/lib/api";
 import {
   END_COORDS,
   LAYER_SLOTS,
@@ -30,31 +22,13 @@ export default function MapView() {
   const containerRef = useRef<HTMLDivElement>(null);
   // Set once the style has loaded, so data layers can be added safely.
   const [map, setMap] = useState<maplibregl.Map | null>(null);
-  const [flood, setFlood] = useState<FloodPolygons | null>(null);
-  const [originalRoute, setOriginalRoute] = useState<RouteFeature | null>(null);
-  const [floodedRoads, setFloodedRoads] = useState<FloodedRoads | null>(null);
-  const [safeRoute, setSafeRoute] = useState<RouteFeature | null>(null);
+  const [route, setRoute] = useState<RouteResponse | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    getFloodPolygons()
+    getRoute({ start_coords: START_COORDS, end_coords: END_COORDS, scenario: "severe" })
       .then((data) => {
-        if (!cancelled) setFlood(data);
-      })
-      .catch((err) => console.error(err));
-    getOriginalRoute()
-      .then((data) => {
-        if (!cancelled) setOriginalRoute(data);
-      })
-      .catch((err) => console.error(err));
-    getFloodedRoads()
-      .then((data) => {
-        if (!cancelled) setFloodedRoads(data);
-      })
-      .catch((err) => console.error(err));
-    getSafeRoute()
-      .then((data) => {
-        if (!cancelled) setSafeRoute(data);
+        if (!cancelled) setRoute(data);
       })
       .catch((err) => console.error(err));
     return () => {
@@ -120,10 +94,14 @@ export default function MapView() {
   return (
     <>
       <div ref={containerRef} style={{ position: "absolute", inset: 0 }} />
-      {map && flood && <FloodLayer map={map} data={flood} />}
-      {map && originalRoute && <OriginalRouteLayer map={map} data={originalRoute} />}
-      {map && floodedRoads && <FloodedRoadLayer map={map} data={floodedRoads} />}
-      {map && safeRoute && <SafeRouteLayer map={map} data={safeRoute} />}
+      {map && route && (
+        <>
+          <FloodLayer map={map} data={route.flood_polygons_geojson} />
+          <OriginalRouteLayer map={map} data={route.original_route_geojson} />
+          <FloodedRoadLayer map={map} data={route.flooded_roads_geojson} />
+          <SafeRouteLayer map={map} data={route.route_geojson} />
+        </>
+      )}
     </>
   );
 }
