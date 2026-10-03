@@ -1,0 +1,106 @@
+{
+  "status": "success",
+  "scenario": "low",
+  "route_found": true,
+  "start_coords": [-122.285, 49.102],
+  "end_coords": [-122.15, 49.12],
+  "distance_km": 11.77,
+  "detour_added_km": 0.0,
+  "flooded_edges": 1,
+  "flooded_edges_avoided": 0,
+  "route_status": "safe",
+  "route_geojson": {
+    "type": "Feature",
+    "properties": {},
+    "geometry": {
+      "type": "LineString",
+      "coordinates": [
+        [-122.285, 49.102],
+        [-122.278, 49.1015],
+        [-122.27, 49.0985],
+        [-122.255, 49.098],
+        [-122.24, 49.0978],
+        [-122.225, 49.0978],
+        [-122.205, 49.098],
+        [-122.185, 49.0982],
+        [-122.17, 49.0985],
+        [-122.16, 49.099],
+        [-122.155, 49.101],
+        [-122.153, 49.106],
+        [-122.152, 49.112],
+        [-122.151, 49.117],
+        [-122.15, 49.12]
+      ]
+    }
+  },
+  "original_route_geojson": {
+    "type": "Feature",
+    "properties": {},
+    "geometry": {
+      "type": "LineString",
+      "coordinates": [
+        [-122.285, 49.102],
+        [-122.278, 49.1015],
+        [-122.27, 49.0985],
+        [-122.255, 49.098],
+        [-122.24, 49.0978],
+        [-122.225, 49.0978],
+        [-122.205, 49.098],
+        [-122.185, 49.0982],
+        [-122.17, 49.0985],
+        [-122.16, 49.099],
+        [-122.155, 49.101],
+        [-122.153, 49.106],
+        [-122.152, 49.112],
+        [-122.151, 49.117],
+        [-122.15, 49.12]
+      ]
+    }
+  },
+  "flood_polygons_geojson": {
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "properties": {
+          "flooded": true,
+          "source": "sentinel-2"
+        },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [-122.214, 49.078],
+              [-122.209, 49.0825],
+              [-122.2, 49.084],
+              [-122.19, 49.0825],
+              [-122.186, 49.0775],
+              [-122.192, 49.0725],
+              [-122.203, 49.071],
+              [-122.211, 49.073],
+              [-122.214, 49.078]
+            ]
+          ]
+        }
+      }
+    ]
+  },
+  "flooded_roads_geojson": {
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "properties": {
+          "flooded": true
+        },
+        "geometry": {
+          "type": "LineString",
+          "coordinates": [
+            [-122.2, 49.072],
+            [-122.2, 49.085]
+          ]
+        }
+      }
+    ]
+  }
+}

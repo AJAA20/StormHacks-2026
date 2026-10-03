@@ -1,0 +1,75 @@
+.panel {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 1;
+  width: 260px;
+  padding: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.88);
+  color: #e5e7eb;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.header {
+  margin-bottom: 14px;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.scenario {
+  margin-top: 2px;
+  font-size: 13px;
+  color: #9ca3af;
+  text-transform: capitalize;
+}
+
+.label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #9ca3af;
+}
+
+.status {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.safe,
+.unsafe {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.safe {
+  color: #22c55e;
+}
+
+.unsafe {
+  color: #ef4444;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.value {
+  margin-top: 2px;
+  font-size: 18px;
+  font-weight: 600;
+}
