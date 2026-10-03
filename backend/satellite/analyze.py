@@ -54,6 +54,7 @@ def analyze_flood_event(
     result = generate_flood_mask(
         flood.green, flood.swir,
         out_mask=out_dir / "flood_mask.tif", out_mndwi=out_dir / "mndwi.tif",
+        out_preflood_mndwi=out_dir / "mndwi_preflood.tif",
         threshold=threshold, scl_path=flood.scl, bbox=bbox, boa_offset=flood.boa_offset,
         pre_green_path=pre.green if pre else None, pre_swir_path=pre.swir if pre else None,
         pre_scl_path=pre.scl if pre else None, pre_boa_offset=pre.boa_offset if pre else 0.0,

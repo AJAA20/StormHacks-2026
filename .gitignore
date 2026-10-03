@@ -197,3 +197,11 @@ outputs/
 
 Thumbs.db
 Desktop.ini
+
+
+# =========================
+# SatRelief demo data (small, needed to run the demo offline)
+# =========================
+!backend/data/graphs/demo_region.graphml
+# OSMnx HTTP cache
+cache/

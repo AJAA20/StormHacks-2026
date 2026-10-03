@@ -56,6 +56,7 @@ def generate_flood_mask(
     pre_boa_offset: float = 0.0,
     out_mndwi: str | Path | None = "data/processed/mndwi.tif",
     cloud_buffer_px: int = 2,
+    out_preflood_mndwi: str | Path | None = None,
 ) -> dict:
     """Run the whole satellite step and write flood_mask.tif (and mndwi.tif).
 
@@ -76,6 +77,9 @@ def generate_flood_mask(
     write_flood_mask(out_mask, mask, grid)
     if out_mndwi:
         write_mndwi(out_mndwi, flood.mndwi, grid)
+    if out_preflood_mndwi and pre:
+        # Saved so flood scenarios can be re-thresholded later without re-downloading.
+        write_mndwi(out_preflood_mndwi, pre.mndwi, grid)
 
     px_area_m2 = abs(grid.transform.a * grid.transform.e)
     valid = mask != NODATA

@@ -5,13 +5,28 @@ import networkx as nx
 from shapely.geometry import shape
 import json
 
-MOCK_FLOOD_PATH = Path(__file__).parent.parent / "data" / "mock_flood.json"
+DATA_DIR = Path(__file__).parent.parent / "data"
+MOCK_FLOOD_PATH = DATA_DIR / "mock_flood.json"
+# Satellite-derived flood polygons, one file per UI scenario
+# (built by scripts/build_flood_scenarios.py from Sentinel-2 MNDWI).
+FLOOD_DIR = DATA_DIR / "flood"
+SCENARIOS = ("low", "moderate", "severe")
 BLOCK_WEIGHT = 1e9  # infinite penalty, per spec
 
 
-def load_flood_polygons(path: Path = MOCK_FLOOD_PATH, flood_level: float = 1.0) -> gpd.GeoDataFrame:
+def flood_path_for(scenario: str) -> Path:
+    """Real satellite flood file for the scenario, falling back to the mock if it's missing."""
+    path = FLOOD_DIR / f"{scenario}.geojson"
+    return path if path.exists() else MOCK_FLOOD_PATH
+
+
+def load_flood_geojson(path: Path = MOCK_FLOOD_PATH) -> dict:
     with open(path) as f:
-        gj = json.load(f)
+        return json.load(f)
+
+
+def load_flood_polygons(path: Path = MOCK_FLOOD_PATH, flood_level: float = 1.0) -> gpd.GeoDataFrame:
+    gj = load_flood_geojson(path)
     geoms = []
     for feat in gj["features"]:
         intensity = feat.get("properties", {}).get("intensity", 1.0)
@@ -29,18 +44,19 @@ def apply_flood_blocking(
     Mutates G in place: sets edge['blocked'] = True and edge['weight'] = BLOCK_WEIGHT
     for any edge whose geometry intersects a flood polygon.
     Returns the count of flooded edges.
-    """
-    flood_union = flood_gdf.geometry.unary_union
-    flooded_count = 0
 
-    for (u, v, k), geom in zip(edges_gdf.index, edges_gdf.geometry):
-        intersects = geom.intersects(flood_union)
+    intersects() is a topological test, so it is exact in EPSG:4326 (no distances involved).
+    """
+    flood_union = flood_gdf.geometry.union_all()
+    # Vectorised test (one call for all edges) instead of a Python loop.
+    flooded = edges_gdf.geometry.intersects(flood_union)
+
+    for (u, v, k), intersects in zip(edges_gdf.index, flooded):
         data = G[u][v][k]
         data["blocked"] = bool(intersects)
         if intersects:
             data["weight"] = BLOCK_WEIGHT
-            flooded_count += 1
         else:
             data["weight"] = data.get("length", 1.0)
 
-    return flooded_count
+    return int(flooded.sum())
