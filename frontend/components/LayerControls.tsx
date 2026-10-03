@@ -14,27 +14,32 @@ const LAYERS: { key: LayerKey; label: string; swatch: string }[] = [
 type Props = {
   visibility: LayerVisibility;
   onToggle: (key: LayerKey) => void;
+  // Matches OriginalRouteLayer: solid "current route" until flooding blocks it.
+  routeCompromised: boolean;
 };
 
 // Legend that doubles as layer toggles.
-export default function LayerControls({ visibility, onToggle }: Props) {
+export default function LayerControls({ visibility, onToggle, routeCompromised }: Props) {
   return (
     <section className={styles.panel}>
       <h2 className={styles.title}>Map layers</h2>
       <ul className={styles.list}>
-        {LAYERS.map(({ key, label, swatch }) => (
-          <li key={key}>
-            <label className={styles.row}>
-              <input
-                type="checkbox"
-                checked={visibility[key]}
-                onChange={() => onToggle(key)}
-              />
-              <span className={`${styles.swatch} ${swatch}`} />
-              <span>{label}</span>
-            </label>
-          </li>
-        ))}
+        {LAYERS.map(({ key, label, swatch }) => {
+          const current = key === "originalRoute" && !routeCompromised;
+          return (
+            <li key={key}>
+              <label className={styles.row}>
+                <input
+                  type="checkbox"
+                  checked={visibility[key]}
+                  onChange={() => onToggle(key)}
+                />
+                <span className={`${styles.swatch} ${current ? styles.swatchCurrent : swatch}`} />
+                <span>{current ? "Current route" : label}</span>
+              </label>
+            </li>
+          );
+        })}
       </ul>
     </section>
   );

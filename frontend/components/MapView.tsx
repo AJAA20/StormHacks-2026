@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+import AnalysisSteps, { type Phase } from "./AnalysisSteps";
 import FloodLayer from "./FloodLayer";
 import FloodedRoadLayer from "./FloodedRoadLayer";
 import LayerControls, { type LayerKey, type LayerVisibility } from "./LayerControls";
@@ -11,6 +12,7 @@ import SafeRouteLayer from "./SafeRouteLayer";
 import ScenarioControls from "./ScenarioControls";
 import StatusBanner from "./StatusBanner";
 import StatusPanel from "./StatusPanel";
+import { buildSteps, isRouteAffected, type AnalysisStep, type Reveal } from "@/lib/analysis";
 import { getRoute, type RouteResponse, type Scenario } from "@/lib/api";
 import {
   END_COORDS,
@@ -41,6 +43,12 @@ export default function MapView() {
   // Bumped by Retry to re-run the request for the same scenario.
   const [attempt, setAttempt] = useState(0);
 
+  // Demo sequence: "before" shows only the current route, "analysing" reveals
+  // the loaded results step by step, "complete" shows everything.
+  const [phase, setPhase] = useState<Phase>("before");
+  const [steps, setSteps] = useState<AnalysisStep[]>([]);
+  const [stepIndex, setStepIndex] = useState(0);
+
   const toggleLayer = (key: LayerKey) =>
     setVisibility((v) => ({ ...v, [key]: !v[key] }));
 
@@ -59,6 +67,33 @@ export default function MapView() {
     startRequest();
     setAttempt((n) => n + 1);
   };
+
+  const runAnalysis = () => {
+    if (!route) return;
+    setSteps(buildSteps(route));
+    setStepIndex(0);
+    setPhase("analysing");
+  };
+
+  // Advance one step at a time; the last step completes the sequence.
+  useEffect(() => {
+    if (phase !== "analysing") return;
+    const isLast = stepIndex === steps.length - 1;
+    const timer = setTimeout(() => {
+      if (isLast) setPhase("complete");
+      else setStepIndex((i) => i + 1);
+    }, steps[stepIndex].durationMs);
+    return () => clearTimeout(timer);
+  }, [phase, stepIndex, steps]);
+
+  const reached = new Set(
+    steps.slice(0, stepIndex + 1).flatMap((step) => (step.reveals ? [step.reveals] : [])),
+  );
+  const shows = (reveal: Reveal) =>
+    phase === "complete" || (phase === "analysing" && reached.has(reveal));
+  // After the sequence, follow the loaded data so scenario switches update instantly.
+  const routeCompromised =
+    route !== null && (phase === "complete" ? isRouteAffected(route) : shows("compromised"));
 
   useEffect(() => {
     let cancelled = false;
@@ -141,31 +176,47 @@ export default function MapView() {
           <FloodLayer
             map={map}
             data={route.flood_polygons_geojson}
-            visible={visibility.flood}
+            visible={visibility.flood && shows("flood")}
           />
           <OriginalRouteLayer
             map={map}
             data={route.original_route_geojson}
             visible={visibility.originalRoute}
+            compromised={routeCompromised}
           />
           <FloodedRoadLayer
             map={map}
             data={route.flooded_roads_geojson}
-            visible={visibility.floodedRoads}
+            visible={visibility.floodedRoads && shows("floodedRoads")}
           />
           <SafeRouteLayer
             map={map}
             data={route.route_geojson}
-            visible={visibility.safeRoute}
+            visible={visibility.safeRoute && shows("safeRoute")}
           />
         </>
       )}
       {route && (
-        <StatusPanel data={route}>
-          <ScenarioControls value={scenario} onChange={selectScenario} disabled={loading} />
+        <StatusPanel data={route} showMetrics={phase === "complete"}>
+          <ScenarioControls
+            value={scenario}
+            onChange={selectScenario}
+            disabled={loading || phase === "analysing"}
+          />
+          <AnalysisSteps
+            phase={phase}
+            steps={phase === "complete" ? buildSteps(route) : steps}
+            current={stepIndex}
+            canRun={!loading}
+            onRun={runAnalysis}
+          />
         </StatusPanel>
       )}
-      <LayerControls visibility={visibility} onToggle={toggleLayer} />
+      <LayerControls
+        visibility={visibility}
+        onToggle={toggleLayer}
+        routeCompromised={routeCompromised}
+      />
       <StatusBanner loading={loading} error={error} onRetry={retry} />
     </>
   );
