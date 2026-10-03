@@ -1,0 +1,19 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {"name": "mock_flood_zone_1"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-122.95, 49.25],
+          [-122.93, 49.25],
+          [-122.93, 49.27],
+          [-122.95, 49.27],
+          [-122.95, 49.25]
+        ]]
+      }
+    }
+  ]
+}
