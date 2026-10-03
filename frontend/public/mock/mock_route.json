@@ -1,0 +1,224 @@
+{
+  "status": "success",
+  "scenario": "severe",
+  "route_found": true,
+  "start_coords": [-122.285, 49.102],
+  "end_coords": [-122.15, 49.12],
+  "distance_km": 13.04,
+  "detour_added_km": 1.27,
+  "flooded_edges": 8,
+  "flooded_edges_avoided": 3,
+  "route_status": "safe",
+  "route_geojson": {
+    "type": "Feature",
+    "properties": {},
+    "geometry": {
+      "type": "LineString",
+      "coordinates": [
+        [-122.285, 49.102],
+        [-122.278, 49.1015],
+        [-122.275, 49.104],
+        [-122.274, 49.112],
+        [-122.272, 49.122],
+        [-122.268, 49.13],
+        [-122.255, 49.132],
+        [-122.235, 49.1325],
+        [-122.21, 49.133],
+        [-122.19, 49.133],
+        [-122.172, 49.1325],
+        [-122.162, 49.13],
+        [-122.155, 49.126],
+        [-122.15, 49.12]
+      ]
+    }
+  },
+  "original_route_geojson": {
+    "type": "Feature",
+    "properties": {},
+    "geometry": {
+      "type": "LineString",
+      "coordinates": [
+        [-122.285, 49.102],
+        [-122.278, 49.1015],
+        [-122.27, 49.0985],
+        [-122.255, 49.098],
+        [-122.24, 49.0978],
+        [-122.225, 49.0978],
+        [-122.205, 49.098],
+        [-122.185, 49.0982],
+        [-122.17, 49.0985],
+        [-122.16, 49.099],
+        [-122.155, 49.101],
+        [-122.153, 49.106],
+        [-122.152, 49.112],
+        [-122.151, 49.117],
+        [-122.15, 49.12]
+      ]
+    }
+  },
+  "flood_polygons_geojson": {
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "properties": {
+          "flooded": true,
+          "source": "sentinel-2"
+        },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [-122.238, 49.088],
+              [-122.229, 49.101],
+              [-122.214, 49.11],
+              [-122.198, 49.116],
+              [-122.182, 49.113],
+              [-122.168, 49.104],
+              [-122.161, 49.092],
+              [-122.166, 49.079],
+              [-122.181, 49.071],
+              [-122.2, 49.068],
+              [-122.219, 49.072],
+              [-122.233, 49.079],
+              [-122.238, 49.088]
+            ]
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "flooded": true,
+          "source": "sentinel-2"
+        },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [-122.262, 49.083],
+              [-122.254, 49.09],
+              [-122.243, 49.089],
+              [-122.239, 49.081],
+              [-122.246, 49.074],
+              [-122.257, 49.075],
+              [-122.262, 49.083]
+            ]
+          ]
+        }
+      }
+    ]
+  },
+  "flooded_roads_geojson": {
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "properties": {
+          "flooded": true
+        },
+        "geometry": {
+          "type": "LineString",
+          "coordinates": [
+            [-122.233, 49.0978],
+            [-122.225, 49.0978],
+            [-122.205, 49.098]
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "flooded": true
+        },
+        "geometry": {
+          "type": "LineString",
+          "coordinates": [
+            [-122.205, 49.098],
+            [-122.185, 49.0982]
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "flooded": true
+        },
+        "geometry": {
+          "type": "LineString",
+          "coordinates": [
+            [-122.185, 49.0982],
+            [-122.17, 49.0985],
+            [-122.163, 49.09885]
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "flooded": true
+        },
+        "geometry": {
+          "type": "LineString",
+          "coordinates": [
+            [-122.2, 49.098],
+            [-122.2, 49.112]
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "flooded": true
+        },
+        "geometry": {
+          "type": "LineString",
+          "coordinates": [
+            [-122.2, 49.072],
+            [-122.2, 49.085],
+            [-122.2, 49.098]
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "flooded": true
+        },
+        "geometry": {
+          "type": "LineString",
+          "coordinates": [
+            [-122.234, 49.085],
+            [-122.2, 49.085]
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "flooded": true
+        },
+        "geometry": {
+          "type": "LineString",
+          "coordinates": [
+            [-122.2, 49.085],
+            [-122.166, 49.085]
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "flooded": true
+        },
+        "geometry": {
+          "type": "LineString",
+          "coordinates": [
+            [-122.25, 49.076],
+            [-122.25, 49.088]
+          ]
+        }
+      }
+    ]
+  }
+}
