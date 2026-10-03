@@ -7,6 +7,7 @@ import FloodLayer from "./FloodLayer";
 import FloodedRoadLayer from "./FloodedRoadLayer";
 import OriginalRouteLayer from "./OriginalRouteLayer";
 import SafeRouteLayer from "./SafeRouteLayer";
+import StatusPanel from "./StatusPanel";
 import { getRoute, type RouteResponse } from "@/lib/api";
 import {
   END_COORDS,
@@ -102,6 +103,7 @@ export default function MapView() {
           <SafeRouteLayer map={map} data={route.route_geojson} />
         </>
       )}
+      {route && <StatusPanel data={route} />}
     </>
   );
 }
