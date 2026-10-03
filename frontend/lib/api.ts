@@ -21,6 +21,7 @@ export type FloodedRoads = FeatureCollection<LineString>;
 const MOCK_FLOOD_URL = "/mock/mock_flood.geojson";
 const MOCK_ORIGINAL_ROUTE_URL = "/mock/mock_original_route.geojson";
 const MOCK_FLOODED_ROADS_URL = "/mock/mock_flooded_roads.geojson";
+const MOCK_SAFE_ROUTE_URL = "/mock/mock_safe_route.geojson";
 
 export async function getFloodPolygons(): Promise<FloodPolygons> {
   const res = await fetch(MOCK_FLOOD_URL);
@@ -45,6 +46,15 @@ export async function getFloodedRoads(): Promise<FloodedRoads> {
   const res = await fetch(MOCK_FLOODED_ROADS_URL);
   if (!res.ok) {
     throw new Error(`Failed to load flooded roads (${res.status})`);
+  }
+  return res.json();
+}
+
+// Safe evacuation route avoiding flooded roads: `route_geojson` in §8.
+export async function getSafeRoute(): Promise<RouteFeature> {
+  const res = await fetch(MOCK_SAFE_ROUTE_URL);
+  if (!res.ok) {
+    throw new Error(`Failed to load safe route (${res.status})`);
   }
   return res.json();
 }

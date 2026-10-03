@@ -6,10 +6,12 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import FloodLayer from "./FloodLayer";
 import FloodedRoadLayer from "./FloodedRoadLayer";
 import OriginalRouteLayer from "./OriginalRouteLayer";
+import SafeRouteLayer from "./SafeRouteLayer";
 import {
   getFloodedRoads,
   getFloodPolygons,
   getOriginalRoute,
+  getSafeRoute,
   type FloodedRoads,
   type FloodPolygons,
   type RouteFeature,
@@ -31,6 +33,7 @@ export default function MapView() {
   const [flood, setFlood] = useState<FloodPolygons | null>(null);
   const [originalRoute, setOriginalRoute] = useState<RouteFeature | null>(null);
   const [floodedRoads, setFloodedRoads] = useState<FloodedRoads | null>(null);
+  const [safeRoute, setSafeRoute] = useState<RouteFeature | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -47,6 +50,11 @@ export default function MapView() {
     getFloodedRoads()
       .then((data) => {
         if (!cancelled) setFloodedRoads(data);
+      })
+      .catch((err) => console.error(err));
+    getSafeRoute()
+      .then((data) => {
+        if (!cancelled) setSafeRoute(data);
       })
       .catch((err) => console.error(err));
     return () => {
@@ -83,6 +91,7 @@ export default function MapView() {
           { id: LAYER_SLOTS.flood, type: "background", layout: { visibility: "none" } },
           { id: LAYER_SLOTS.route, type: "background", layout: { visibility: "none" } },
           { id: LAYER_SLOTS.floodedRoads, type: "background", layout: { visibility: "none" } },
+          { id: LAYER_SLOTS.safeRoute, type: "background", layout: { visibility: "none" } },
         ],
       },
     });
@@ -114,6 +123,7 @@ export default function MapView() {
       {map && flood && <FloodLayer map={map} data={flood} />}
       {map && originalRoute && <OriginalRouteLayer map={map} data={originalRoute} />}
       {map && floodedRoads && <FloodedRoadLayer map={map} data={floodedRoads} />}
+      {map && safeRoute && <SafeRouteLayer map={map} data={safeRoute} />}
     </>
   );
 }
