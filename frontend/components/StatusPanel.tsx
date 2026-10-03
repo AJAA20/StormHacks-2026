@@ -13,9 +13,13 @@ type Props = {
 // Route metrics from the /api/route response (architecture.md §9).
 export default function StatusPanel({ data, children, showMetrics = true }: Props) {
   const isSafe = data.route_found && data.route_status === "safe";
-  const statusLabel = data.route_found
-    ? (data.route_status ?? "route found").replace(/_/g, " ").toUpperCase()
-    : "NO SAFE ROUTE";
+  // Only claim a reroute when the response confirms one.
+  const rerouted = (data.detour_added_km ?? 0) > 0 || (data.flooded_edges_avoided ?? 0) > 0;
+  const statusLabel = !data.route_found
+    ? "NO SAFE ROUTE"
+    : isSafe && rerouted
+      ? "REROUTED"
+      : (data.route_status ?? "route found").replace(/_/g, " ").toUpperCase();
 
   return (
     <aside className={styles.panel}>
@@ -40,7 +44,7 @@ export default function StatusPanel({ data, children, showMetrics = true }: Prop
             </div>
             <div>
               <dt className={styles.label}>Detour added</dt>
-              <dd className={styles.value}>{km(data.detour_added_km, "+")}</dd>
+              <dd className={styles.value}>{detour(data.detour_added_km)}</dd>
             </div>
             <div>
               <dt className={styles.label}>Flooded roads</dt>
@@ -60,4 +64,8 @@ export default function StatusPanel({ data, children, showMetrics = true }: Prop
 // Missing values show as a dash rather than breaking the panel.
 function km(value: number | null, prefix = "") {
   return value === null ? "—" : `${prefix}${value.toFixed(1)} km`;
+}
+
+function detour(value: number | null) {
+  return value === 0 ? "None" : km(value, "+");
 }
