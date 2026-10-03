@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import type { GeoJSONSource, Map } from "maplibre-gl";
-import type { FloodPolygons } from "@/lib/api";
+import { EMPTY_COLLECTION, type FloodPolygons } from "@/lib/api";
 import { LAYER_SLOTS } from "@/lib/config";
 
 const SOURCE_ID = "flood";
@@ -11,20 +11,22 @@ const LAYER_IDS = ["flood-fill", "flood-outline"];
 
 type Props = {
   map: Map;
-  data: FloodPolygons;
+  // null draws nothing (field missing from the response).
+  data: FloodPolygons | null;
   visible: boolean;
 };
 
 // Semi-transparent blue flood polygons (architecture.md §9).
 export default function FloodLayer({ map, data, visible }: Props) {
   useEffect(() => {
+    const geojson = data ?? EMPTY_COLLECTION;
     const source = map.getSource<GeoJSONSource>(SOURCE_ID);
     if (source) {
-      source.setData(data);
+      source.setData(geojson);
       return;
     }
 
-    map.addSource(SOURCE_ID, { type: "geojson", data });
+    map.addSource(SOURCE_ID, { type: "geojson", data: geojson });
     map.addLayer(
       {
         id: LAYER_IDS[0],

@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import type { GeoJSONSource, Map } from "maplibre-gl";
-import type { FloodedRoads } from "@/lib/api";
+import { EMPTY_COLLECTION, type FloodedRoads } from "@/lib/api";
 import { LAYER_SLOTS } from "@/lib/config";
 
 const SOURCE_ID = "flooded-roads";
@@ -11,20 +11,22 @@ const LAYER_IDS = ["flooded-roads-line"];
 
 type Props = {
   map: Map;
-  data: FloodedRoads;
+  // null draws nothing (field missing from the response).
+  data: FloodedRoads | null;
   visible: boolean;
 };
 
 // Road segments classified as flooded, in solid red (architecture.md §9).
 export default function FloodedRoadLayer({ map, data, visible }: Props) {
   useEffect(() => {
+    const geojson = data ?? EMPTY_COLLECTION;
     const source = map.getSource<GeoJSONSource>(SOURCE_ID);
     if (source) {
-      source.setData(data);
+      source.setData(geojson);
       return;
     }
 
-    map.addSource(SOURCE_ID, { type: "geojson", data });
+    map.addSource(SOURCE_ID, { type: "geojson", data: geojson });
     map.addLayer(
       {
         id: LAYER_IDS[0],

@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import type { GeoJSONSource, Map } from "maplibre-gl";
-import type { RouteFeature } from "@/lib/api";
+import { EMPTY_COLLECTION, type RouteFeature } from "@/lib/api";
 import { LAYER_SLOTS } from "@/lib/config";
 
 const SOURCE_ID = "original-route";
@@ -11,7 +11,8 @@ const LAYER_IDS = ["original-route-casing", "original-route-line"];
 
 type Props = {
   map: Map;
-  data: RouteFeature;
+  // null draws nothing (field missing from the response).
+  data: RouteFeature | null;
   visible: boolean;
 };
 
@@ -19,13 +20,14 @@ type Props = {
 // underneath keeps it legible over satellite imagery.
 export default function OriginalRouteLayer({ map, data, visible }: Props) {
   useEffect(() => {
+    const geojson = data ?? EMPTY_COLLECTION;
     const source = map.getSource<GeoJSONSource>(SOURCE_ID);
     if (source) {
-      source.setData(data);
+      source.setData(geojson);
       return;
     }
 
-    map.addSource(SOURCE_ID, { type: "geojson", data });
+    map.addSource(SOURCE_ID, { type: "geojson", data: geojson });
     map.addLayer(
       {
         id: LAYER_IDS[0],
