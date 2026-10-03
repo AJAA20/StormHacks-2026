@@ -1,12 +1,15 @@
+import type { ReactNode } from "react";
 import type { RouteResponse } from "@/lib/api";
 import styles from "./StatusPanel.module.css";
 
 type Props = {
   data: RouteResponse;
+  // Controls shown under the header, e.g. the scenario selector.
+  children?: ReactNode;
 };
 
 // Route metrics from the /api/route response (architecture.md §9).
-export default function StatusPanel({ data }: Props) {
+export default function StatusPanel({ data, children }: Props) {
   const isSafe = data.route_found && data.route_status === "safe";
   const statusLabel = data.route_found ? data.route_status.toUpperCase() : "NO SAFE ROUTE";
 
@@ -16,6 +19,8 @@ export default function StatusPanel({ data }: Props) {
         <h1 className={styles.title}>SatRelief</h1>
         <p className={styles.scenario}>{data.scenario} flood scenario</p>
       </header>
+
+      {children}
 
       <div className={styles.status}>
         <span className={styles.label}>Route status</span>

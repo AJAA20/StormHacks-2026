@@ -48,13 +48,17 @@ export type RouteResponse = {
   flooded_roads_geojson: FloodedRoads;
 };
 
-const MOCK_ROUTE_URL = "/mock/mock_route.json";
+// mock_route.json is the severe case (the file shared with Person 3).
+const MOCK_ROUTE_URLS: Record<Scenario, string> = {
+  low: "/mock/mock_route_low.json",
+  moderate: "/mock/mock_route_moderate.json",
+  severe: "/mock/mock_route.json",
+};
 
-// Mock: ignores the request and returns the static response.
+// Mock: returns the static response for the requested scenario.
 // Backend: POST `request` as JSON to /api/route instead.
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function getRoute(request: RouteRequest): Promise<RouteResponse> {
-  const res = await fetch(MOCK_ROUTE_URL);
+  const res = await fetch(MOCK_ROUTE_URLS[request.scenario]);
   if (!res.ok) {
     throw new Error(`Failed to load route (${res.status})`);
   }

@@ -8,8 +8,9 @@ import FloodedRoadLayer from "./FloodedRoadLayer";
 import LayerControls, { type LayerKey, type LayerVisibility } from "./LayerControls";
 import OriginalRouteLayer from "./OriginalRouteLayer";
 import SafeRouteLayer from "./SafeRouteLayer";
+import ScenarioControls from "./ScenarioControls";
 import StatusPanel from "./StatusPanel";
-import { getRoute, type RouteResponse } from "@/lib/api";
+import { getRoute, type RouteResponse, type Scenario } from "@/lib/api";
 import {
   END_COORDS,
   LAYER_SLOTS,
@@ -24,6 +25,7 @@ export default function MapView() {
   const containerRef = useRef<HTMLDivElement>(null);
   // Set once the style has loaded, so data layers can be added safely.
   const [map, setMap] = useState<maplibregl.Map | null>(null);
+  const [scenario, setScenario] = useState<Scenario>("severe");
   const [route, setRoute] = useState<RouteResponse | null>(null);
   const [visibility, setVisibility] = useState<LayerVisibility>({
     flood: true,
@@ -37,7 +39,7 @@ export default function MapView() {
 
   useEffect(() => {
     let cancelled = false;
-    getRoute({ start_coords: START_COORDS, end_coords: END_COORDS, scenario: "severe" })
+    getRoute({ start_coords: START_COORDS, end_coords: END_COORDS, scenario })
       .then((data) => {
         if (!cancelled) setRoute(data);
       })
@@ -45,7 +47,7 @@ export default function MapView() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [scenario]);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -129,7 +131,11 @@ export default function MapView() {
           />
         </>
       )}
-      {route && <StatusPanel data={route} />}
+      {route && (
+        <StatusPanel data={route}>
+          <ScenarioControls value={scenario} onChange={setScenario} />
+        </StatusPanel>
+      )}
       <LayerControls visibility={visibility} onToggle={toggleLayer} />
     </>
   );

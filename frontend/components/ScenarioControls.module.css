@@ -1,0 +1,34 @@
+.group {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 14px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.option,
+.active {
+  padding: 6px 0;
+  border: none;
+  border-radius: 6px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.option {
+  background: transparent;
+  color: #9ca3af;
+}
+
+.option:hover {
+  color: #e5e7eb;
+}
+
+.active {
+  background: #3b82f6;
+  color: #fff;
+}
