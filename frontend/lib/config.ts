@@ -24,4 +24,5 @@ export const SATELLITE_ATTRIBUTION =
 export const LAYER_SLOTS = {
   flood: "slot-flood",
   route: "slot-route",
+  floodedRoads: "slot-flooded-roads",
 } as const;

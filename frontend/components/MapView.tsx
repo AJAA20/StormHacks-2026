@@ -4,10 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import FloodLayer from "./FloodLayer";
+import FloodedRoadLayer from "./FloodedRoadLayer";
 import OriginalRouteLayer from "./OriginalRouteLayer";
 import {
+  getFloodedRoads,
   getFloodPolygons,
   getOriginalRoute,
+  type FloodedRoads,
   type FloodPolygons,
   type RouteFeature,
 } from "@/lib/api";
@@ -27,6 +30,7 @@ export default function MapView() {
   const [map, setMap] = useState<maplibregl.Map | null>(null);
   const [flood, setFlood] = useState<FloodPolygons | null>(null);
   const [originalRoute, setOriginalRoute] = useState<RouteFeature | null>(null);
+  const [floodedRoads, setFloodedRoads] = useState<FloodedRoads | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -38,6 +42,11 @@ export default function MapView() {
     getOriginalRoute()
       .then((data) => {
         if (!cancelled) setOriginalRoute(data);
+      })
+      .catch((err) => console.error(err));
+    getFloodedRoads()
+      .then((data) => {
+        if (!cancelled) setFloodedRoads(data);
       })
       .catch((err) => console.error(err));
     return () => {
@@ -73,6 +82,7 @@ export default function MapView() {
           // Draw-order slots: data layers are inserted beneath these.
           { id: LAYER_SLOTS.flood, type: "background", layout: { visibility: "none" } },
           { id: LAYER_SLOTS.route, type: "background", layout: { visibility: "none" } },
+          { id: LAYER_SLOTS.floodedRoads, type: "background", layout: { visibility: "none" } },
         ],
       },
     });
@@ -103,6 +113,7 @@ export default function MapView() {
       <div ref={containerRef} style={{ position: "absolute", inset: 0 }} />
       {map && flood && <FloodLayer map={map} data={flood} />}
       {map && originalRoute && <OriginalRouteLayer map={map} data={originalRoute} />}
+      {map && floodedRoads && <FloodedRoadLayer map={map} data={floodedRoads} />}
     </>
   );
 }

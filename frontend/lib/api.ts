@@ -15,8 +15,12 @@ export type FloodPolygons = FeatureCollection<Polygon | MultiPolygon>;
 // A route as a single LineString Feature, matching `route_geojson` (§8).
 export type RouteFeature = Feature<LineString>;
 
+// Road edges that intersect flood polygons (§7 road state FLOODED).
+export type FloodedRoads = FeatureCollection<LineString>;
+
 const MOCK_FLOOD_URL = "/mock/mock_flood.geojson";
 const MOCK_ORIGINAL_ROUTE_URL = "/mock/mock_original_route.geojson";
+const MOCK_FLOODED_ROADS_URL = "/mock/mock_flooded_roads.geojson";
 
 export async function getFloodPolygons(): Promise<FloodPolygons> {
   const res = await fetch(MOCK_FLOOD_URL);
@@ -31,6 +35,16 @@ export async function getOriginalRoute(): Promise<RouteFeature> {
   const res = await fetch(MOCK_ORIGINAL_ROUTE_URL);
   if (!res.ok) {
     throw new Error(`Failed to load original route (${res.status})`);
+  }
+  return res.json();
+}
+
+// Flooded road geometries. §8 only returns a count (`flooded_edges`);
+// the geometry needs agreeing with Person 3.
+export async function getFloodedRoads(): Promise<FloodedRoads> {
+  const res = await fetch(MOCK_FLOODED_ROADS_URL);
+  if (!res.ok) {
+    throw new Error(`Failed to load flooded roads (${res.status})`);
   }
   return res.json();
 }

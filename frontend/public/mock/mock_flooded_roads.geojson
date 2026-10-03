@@ -1,0 +1,96 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "flooded": true },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-122.233, 49.0978],
+          [-122.225, 49.0978],
+          [-122.205, 49.098]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "flooded": true },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-122.205, 49.098],
+          [-122.185, 49.0982]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "flooded": true },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-122.185, 49.0982],
+          [-122.17, 49.0985],
+          [-122.163, 49.09885]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "flooded": true },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-122.2, 49.098],
+          [-122.2, 49.112]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "flooded": true },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-122.2, 49.072],
+          [-122.2, 49.085],
+          [-122.2, 49.098]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "flooded": true },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-122.234, 49.085],
+          [-122.2, 49.085]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "flooded": true },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-122.2, 49.085],
+          [-122.166, 49.085]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "flooded": true },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-122.25, 49.076],
+          [-122.25, 49.088]
+        ]
+      }
+    }
+  ]
+}
