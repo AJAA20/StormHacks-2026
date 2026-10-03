@@ -1,0 +1,10 @@
+fastapi>=0.110
+uvicorn[standard]>=0.29
+pydantic>=2.6
+osmnx>=2.0        # NOTE: v2 bbox order is (west, south, east, north)
+networkx>=3.2
+shapely>=2.0
+geopandas>=0.14
+numpy>=1.26
+pytest
+scikit-learn>=1.9.1
