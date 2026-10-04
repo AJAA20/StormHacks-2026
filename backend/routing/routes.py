@@ -2,6 +2,7 @@
 import json
 import threading
 
+from backend.regions.store import PRESET_ID, load_region, region_dir
 from backend.routing.graph_loader import load_graph, get_edges_gdf
 from backend.routing.flood_intersection import (
     apply_flood_blocking,
@@ -12,9 +13,20 @@ from backend.routing.flood_intersection import (
 from backend.routing.router import find_route, route_length_km
 from backend.routing.geojson import path_to_geojson
 
-# The graph is shared and apply_flood_blocking mutates its weights, so two requests
-# for different scenarios must not interleave.
+# Graphs are shared and apply_flood_blocking mutates their weights, so two requests
+# must not interleave.
 _lock = threading.Lock()
+
+
+class PointOutsideRegion(ValueError):
+    pass
+
+
+def _check_inside(bbox, point, label: str) -> None:
+    w, s, e, n = bbox
+    lng, lat = point
+    if not (w <= lng <= e and s <= lat <= n):
+        raise PointOutsideRegion(f"{label} is outside the analysed area. Pick a point inside the dashed box.")
 
 
 def _flooded_roads_geojson(edges_gdf, flooded_mask) -> dict:
@@ -36,11 +48,18 @@ def compute_route(
     start_coords: tuple[float, float],
     end_coords: tuple[float, float],
     scenario: str = "severe",
+    region_id: str = PRESET_ID,
 ) -> dict:
+    """Raises RegionNotFound (unknown region) or PointOutsideRegion (bad start/end)."""
+    region = load_region(region_id)
+    _check_inside(region["bbox"], start_coords, "Start")
+    _check_inside(region["bbox"], end_coords, "Destination")
+    folder = region_dir(region_id)
+
     with _lock:
-        G = load_graph()
+        G = load_graph(folder / "graph.graphml")
         edges_gdf = get_edges_gdf(G)
-        flood_path = flood_path_for(scenario)
+        flood_path = flood_path_for(scenario, folder / "flood")
         flood_geojson = load_flood_geojson(flood_path)
         flood_gdf = load_flood_polygons(flood_path)
         flooded_count = apply_flood_blocking(G, edges_gdf, flood_gdf)
@@ -54,6 +73,7 @@ def compute_route(
         result = {
             "status": "success",
             "scenario": scenario,
+            "region_id": region_id,
             "start_coords": list(start_coords),
             "end_coords": list(end_coords),
             "flooded_edges": flooded_count,

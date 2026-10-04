@@ -1,0 +1,77 @@
+{
+  "id": "abbotsford-2021",
+  "name": "Abbotsford / Sumas Prairie, BC (Nov 2021)",
+  "bbox": [
+    -122.32,
+    49.0,
+    -122.1,
+    49.12
+  ],
+  "center": [
+    -122.21,
+    49.06
+  ],
+  "preset": true,
+  "flood_dates": "2021-11-14/2021-12-10",
+  "preflood_dates": "2021-08-01/2021-10-31",
+  "flood_scene": {
+    "id": "S2A_T10UEV_20211121T191716_L2A",
+    "date": "2021-11-21",
+    "aoi_clear_pct": 84.5
+  },
+  "preflood_scene": {
+    "id": "S2A_T10UEV_20210803T191701_L2A",
+    "date": "2021-08-03",
+    "aoi_clear_pct": 100.0
+  },
+  "scenarios": {
+    "low": {
+      "threshold": 0.3,
+      "polygons": 115,
+      "area_km2": 18.39,
+      "path": "low.geojson"
+    },
+    "moderate": {
+      "threshold": 0.15,
+      "polygons": 127,
+      "area_km2": 24.15,
+      "path": "moderate.geojson"
+    },
+    "severe": {
+      "threshold": 0.0,
+      "polygons": 166,
+      "area_km2": 27.63,
+      "path": "severe.geojson"
+    }
+  },
+  "overlay_corners": [
+    [
+      -122.32173269493985,
+      49.12154433304088
+    ],
+    [
+      -122.09793819722346,
+      49.12154433304088
+    ],
+    [
+      -122.09793819722346,
+      48.99846700332424
+    ],
+    [
+      -122.32173269493985,
+      48.99846700332424
+    ]
+  ],
+  "default_start": [
+    -122.219,
+    49.024
+  ],
+  "default_end": [
+    -122.2852,
+    49.0824
+  ],
+  "road_edges": 4821,
+  "warnings": [],
+  "created_at": 1791075173.903543,
+  "source": "Sentinel-2 L2A (Copernicus) via Earth Search; roads (c) OpenStreetMap"
+}

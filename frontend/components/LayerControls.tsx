@@ -1,6 +1,6 @@
 import styles from "./LayerControls.module.css";
 
-export type LayerKey = "flood" | "floodedRoads" | "originalRoute" | "safeRoute";
+export type LayerKey = "flood" | "floodedRoads" | "originalRoute" | "safeRoute" | "satellite";
 export type LayerVisibility = Record<LayerKey, boolean>;
 
 // Top to bottom in the panel; swatches mirror each layer's map styling.
@@ -9,6 +9,7 @@ const LAYERS: { key: LayerKey; label: string; swatch: string }[] = [
   { key: "originalRoute", label: "Original route", swatch: styles.swatchOriginal },
   { key: "floodedRoads", label: "Flooded roads", swatch: styles.swatchFloodedRoads },
   { key: "flood", label: "Flood area (Sentinel-2)", swatch: styles.swatchFlood },
+  { key: "satellite", label: "Sentinel-2 image (flood date)", swatch: styles.swatchSatellite },
 ];
 
 type Props = {

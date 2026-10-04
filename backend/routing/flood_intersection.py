@@ -7,16 +7,16 @@ import json
 
 DATA_DIR = Path(__file__).parent.parent / "data"
 MOCK_FLOOD_PATH = DATA_DIR / "mock_flood.json"
-# Satellite-derived flood polygons, one file per UI scenario
-# (built by scripts/build_flood_scenarios.py from Sentinel-2 MNDWI).
-FLOOD_DIR = DATA_DIR / "flood"
+# Satellite-derived flood polygons, one file per UI scenario, per region
+# (built by backend/regions/builder.py from Sentinel-2 MNDWI). Default = Abbotsford preset.
+FLOOD_DIR = DATA_DIR / "regions" / "abbotsford-2021" / "flood"
 SCENARIOS = ("low", "moderate", "severe")
 BLOCK_WEIGHT = 1e9  # infinite penalty, per spec
 
 
-def flood_path_for(scenario: str) -> Path:
+def flood_path_for(scenario: str, flood_dir: Path = FLOOD_DIR) -> Path:
     """Real satellite flood file for the scenario, falling back to the mock if it's missing."""
-    path = FLOOD_DIR / f"{scenario}.geojson"
+    path = Path(flood_dir) / f"{scenario}.geojson"
     return path if path.exists() else MOCK_FLOOD_PATH
 
 
@@ -47,6 +47,13 @@ def apply_flood_blocking(
 
     intersects() is a topological test, so it is exact in EPSG:4326 (no distances involved).
     """
+    if flood_gdf.empty:  # no flooding detected: every road is open
+        for (u, v, k) in edges_gdf.index:
+            data = G[u][v][k]
+            data["blocked"] = False
+            data["weight"] = data.get("length", 1.0)
+        return 0
+
     flood_union = flood_gdf.geometry.union_all()
     # Vectorised test (one call for all edges) instead of a Python loop.
     flooded = edges_gdf.geometry.intersects(flood_union)

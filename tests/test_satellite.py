@@ -78,8 +78,8 @@ def test_threshold_is_adjustable():
 
 
 def test_scl_cloud_mask():
-    scl = np.array([4, 6, 8, 9, 10, 3, 0, np.nan])
-    assert cloud_mask_from_scl(scl).tolist() == [False, False, True, True, True, True, True, True]
+    scl = np.array([4, 6, 8, 9, 10, 3, 0, 11, np.nan])
+    assert cloud_mask_from_scl(scl).tolist() == [False, False, True, True, True, True, True, True, True]
 
 
 def test_cloud_buffer_grows_mask():

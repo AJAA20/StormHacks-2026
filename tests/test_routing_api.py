@@ -1,6 +1,6 @@
 """Integration tests: satellite flood scenarios -> Jethro's routing -> /api/route (what the UI calls).
 
-Uses the committed demo data (backend/data/graphs/demo_region.graphml and backend/data/flood/*.geojson);
+Uses the committed Abbotsford preset (backend/data/regions/abbotsford-2021/);
 skipped if it hasn't been generated.
 """
 
@@ -10,11 +10,12 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-GRAPH = ROOT / "backend/data/graphs/demo_region.graphml"
-FLOOD = ROOT / "backend/data/flood"
+PRESET = ROOT / "backend/data/regions/abbotsford-2021"
+GRAPH = PRESET / "graph.graphml"
+FLOOD = PRESET / "flood"
 pytestmark = pytest.mark.skipif(
     not GRAPH.exists() or not (FLOOD / "severe.geojson").exists(),
-    reason="demo data missing: run backend/routing/download_graph.py and scripts/build_flood_scenarios.py",
+    reason="preset missing: run scripts/build_region.py (see README)",
 )
 
 START = [-122.219, 49.024]  # south edge of Sumas Prairie (frontend/lib/config.ts)

@@ -2,7 +2,10 @@
 
 Satellite-aware evacuation routing: Sentinel-2 imagery → MNDWI flood detection → flood polygons →
 OpenStreetMap road blocking → A* safe route → interactive map.
-Demo: Abbotsford / Sumas Prairie flood, November 2021.
+
+- **Examples (instant, offline):** Abbotsford / Sumas Prairie, BC (Nov 2021) and Conselice, Emilia-Romagna, Italy (May 2023).
+- **Analyze a new area:** search a place (or pan the map), pick the flood dates, and SatRelief finds the clearest
+  Sentinel-2 image in the open archive, maps the water, downloads the roads and plans routes — about 15–40 s.
 
 ## Setup (once)
 
@@ -12,39 +15,58 @@ pip install -r requirements.txt
 cd frontend && npm install
 ```
 
-The demo data is committed (`backend/data/graphs/demo_region.graphml`, `backend/data/flood/*.geojson`),
-so the app runs offline without the steps below.
+## Run the app (two terminals)
 
-## Run the app
-
-start backend (repo root):
-```
-uvicorn backend.main:app --reload
+Terminal 1 — backend (repo root):
+```bash
+source .venv/bin/activate && uvicorn backend.main:app --reload
 ```
 
-start frontend against the real backend (`frontend/`):
+Terminal 2 — frontend (`frontend/`):
+```bash
+npm run dev
 ```
-NEXT_PUBLIC_USE_MOCK=false npm run dev
-```
-Open http://localhost:3000. Without `NEXT_PUBLIC_USE_MOCK=false` the UI uses the mock files in `frontend/public/mock`.
 
-## Regenerate the data (optional, needs internet)
+Open http://localhost:3000.
+
+## Using it
+
+1. **Area**: pick an example from the dropdown. The dashed box is the analysed area; the image inside it is the
+   real Sentinel-2 photo from the flood date.
+2. **Route**: drag the blue (start) / green (destination) markers, or click *Move start* / *Move destination* and click the map.
+3. **Run analysis**: steps through flood detected → flooded roads → route compromised → safe route.
+4. **Low / Moderate / Severe**: the same satellite image thresholded more or less strictly (MNDWI 0.30 / 0.15 / 0.00).
+5. **+ Analyze a new area**: search a place (or *Try an example*), frame the orange box (max 25 km), set the
+   flood dates (2–4 weeks around the flood), *Analyze area*. When it finishes, click the map to place start and destination.
+
+New areas need internet (Earth Search for Sentinel-2, OpenStreetMap for roads) and a mostly cloud-free image in
+the chosen dates; otherwise you get a clear message (e.g. "too cloudy — widen the dates").
+
+## Test
 
 ```bash
-# Sentinel-2 from Earth Search (no API key) -> MNDWI -> flood polygons
-python scripts/analyze_flood.py --bbox -122.32 49.00 -122.10 49.12 \
-    --flood-dates 2021-11-14/2021-12-10 --preflood-dates 2021-08-01/2021-10-31
-# One flood layer per UI scenario (low / moderate / severe)
-python scripts/build_flood_scenarios.py
-# OSM road network for the same bbox
-python -m backend.routing.download_graph
+pytest -q                                # unit + API tests, offline (~3 s)
+SATRELIEF_NETWORK_TESTS=1 pytest -q      # also real Earth Search / OSM builds
+python scripts/smoke_test.py             # end-to-end against the running backend, incl. a live analysis
+python scripts/smoke_test.py --skip-live # same, offline (examples only)
 ```
 
-## Tests
+## API
 
-```bash
-pytest -q                                   # offline
-SATRELIEF_NETWORK_TESTS=1 pytest -q         # also hits Earth Search
-```
+| Method | Path | Purpose |
+|---|---|---|
+| GET | `/api/regions` | Analysed areas (examples first) |
+| GET | `/api/regions/{id}` / `/api/regions/{id}/overlay` | Area details / Sentinel-2 image (WebP) |
+| POST | `/api/analyze` | `{name, bbox:[w,s,e,n], flood_dates:"YYYY-MM-DD/YYYY-MM-DD", preflood_dates?}` → job |
+| GET | `/api/analyze/{job_id}` | Job progress: `status`, `stage`, `progress`, `error`, `region_id` |
+| POST | `/api/route` | `{region_id, start_coords, end_coords, scenario}` → routes, flood polygons, flooded roads |
+| GET | `/api/geocode?q=` | Place search (OpenStreetMap Nominatim) |
 
-Contains modified Copernicus Sentinel data 2021. Road data © OpenStreetMap contributors (ODbL).
+## Data layout
+
+`backend/data/regions/<id>/` holds `region.json`, `graph.graphml` (roads), `flood/{low,moderate,severe}.geojson`
+and `overlay.webp`. Examples are committed; areas analysed at runtime stay local (gitignored).
+Rebuild an example: `python scripts/build_region.py --help`.
+
+Contains modified Copernicus Sentinel data. Road data © OpenStreetMap contributors (ODbL).
+Place search © OpenStreetMap Nominatim.

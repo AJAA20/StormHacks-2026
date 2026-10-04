@@ -8,7 +8,7 @@ import type {
   MultiPolygon,
   Polygon,
 } from "geojson";
-import type { LngLat } from "./config";
+import { END_COORDS, START_COORDS, type LngLat } from "./config";
 
 // Flood polygons in EPSG:4326, [longitude, latitude] (architecture.md §6).
 export type FloodPolygons = FeatureCollection<Polygon | MultiPolygon>;
@@ -21,12 +21,61 @@ export type FloodedRoads = FeatureCollection<LineString>;
 
 export type Scenario = "low" | "moderate" | "severe";
 
+// [west, south, east, north] in degrees.
+export type BBox = [number, number, number, number];
+
 // Request body for POST /api/route (§8).
 export type RouteRequest = {
   start_coords: LngLat;
   end_coords: LngLat;
   scenario: Scenario;
+  // Analysed area to route in (GET /api/regions).
+  region_id: string;
 };
+
+export type SceneInfo = { id: string; date: string; aoi_clear_pct: number };
+export type ScenarioStats = { threshold: number; polygons: number; area_km2: number };
+
+// An analysed area: a preset (e.g. Abbotsford) or one a user asked for.
+export type Region = {
+  id: string;
+  name: string;
+  bbox: BBox;
+  center: LngLat;
+  preset: boolean;
+  flood_dates: string;
+  preflood_dates: string | null;
+  flood_scene: SceneInfo | null;
+  preflood_scene: SceneInfo | null;
+  scenarios: Record<Scenario, ScenarioStats> | null;
+  // Corners of the Sentinel-2 overlay image: TL, TR, BR, BL.
+  overlay_corners: [LngLat, LngLat, LngLat, LngLat] | null;
+  default_start: LngLat | null;
+  default_end: LngLat | null;
+  warnings: string[] | null;
+  road_edges: number | null;
+};
+
+// Background analysis of a new area (POST /api/analyze, then poll).
+export type Job = {
+  id: string;
+  region_id: string;
+  name: string;
+  status: "queued" | "running" | "done" | "error";
+  stage: string;
+  progress: number;
+  error: string | null;
+};
+
+export type AnalyzeRequest = {
+  name: string;
+  bbox: BBox;
+  flood_dates: string;
+  preflood_dates?: string;
+};
+
+// Place search result (GET /api/geocode).
+export type Place = { name: string; center: LngLat; bbox: BBox };
 
 // Response from POST /api/route: §8 plus the fields proposed to Person 3
 // (start/end_coords, original_route_geojson, flooded_roads_geojson, and
@@ -52,8 +101,73 @@ export type RouteResponse = {
 // Drawn by a layer whose data is null, so stale shapes are cleared.
 export const EMPTY_COLLECTION: FeatureCollection = { type: "FeatureCollection", features: [] };
 
-// Defaults to mock data; set NEXT_PUBLIC_USE_MOCK=false to call FastAPI.
-const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK !== "false";
+// Calls the FastAPI backend by default; set NEXT_PUBLIC_USE_MOCK=true for the
+// static files in public/mock (no backend needed, but no new-area analysis).
+export const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK === "true";
+
+const BACKEND_DOWN = "Can't reach the SatRelief backend. Is it running on port 8000?";
+
+// fetch + JSON with readable errors: FastAPI's {"detail": "..."} becomes the message.
+async function request<T>(url: string, init?: RequestInit): Promise<T> {
+  let res: Response;
+  try {
+    res = await fetch(url, init);
+  } catch {
+    throw new Error(BACKEND_DOWN);
+  }
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    if (typeof body?.detail === "string") throw new Error(body.detail);
+    // The Next.js proxy answers 500 with no JSON when the backend is not running.
+    throw new Error(res.status >= 500 ? BACKEND_DOWN : `Request failed (${res.status})`);
+  }
+  return res.json() as Promise<T>;
+}
+
+const post = (body: unknown): RequestInit => ({
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(body),
+});
+
+// Stand-in region for mock mode, matching the mock route files (Abbotsford).
+const MOCK_REGION: Region = {
+  id: "mock",
+  name: "Abbotsford / Sumas Prairie, BC (mock data)",
+  bbox: [-122.32, 49.0, -122.1, 49.12],
+  center: [-122.21, 49.06],
+  preset: true,
+  flood_dates: "2021-11-14/2021-12-10",
+  preflood_dates: null,
+  flood_scene: null,
+  preflood_scene: null,
+  scenarios: null,
+  overlay_corners: null,
+  default_start: START_COORDS,
+  default_end: END_COORDS,
+  warnings: null,
+  road_edges: null,
+};
+
+export async function listRegions(): Promise<Region[]> {
+  return USE_MOCK ? [MOCK_REGION] : request<Region[]>("/api/regions");
+}
+
+export function overlayUrl(regionId: string): string {
+  return `/api/regions/${encodeURIComponent(regionId)}/overlay`;
+}
+
+export function startAnalysis(body: AnalyzeRequest): Promise<Job> {
+  return request<Job>("/api/analyze", post(body));
+}
+
+export function getJob(jobId: string): Promise<Job> {
+  return request<Job>(`/api/analyze/${encodeURIComponent(jobId)}`);
+}
+
+export function searchPlaces(query: string): Promise<Place[]> {
+  return request<Place[]>(`/api/geocode?q=${encodeURIComponent(query)}`);
+}
 
 // mock_route.json is the severe case (the file shared with Person 3).
 const MOCK_ROUTE_URLS: Record<Scenario, string> = {
@@ -62,22 +176,14 @@ const MOCK_ROUTE_URLS: Record<Scenario, string> = {
   severe: "/mock/mock_route.json",
 };
 
-export async function getRoute(request: RouteRequest): Promise<RouteResponse> {
-  const res = USE_MOCK
-    ? await fetch(MOCK_ROUTE_URLS[request.scenario])
-    : await fetch("/api/route", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(request),
-      });
-  if (!res.ok) {
-    throw new Error(`Failed to load route (${res.status})`);
-  }
-  const raw = await res.json();
+export async function getRoute(body: RouteRequest): Promise<RouteResponse> {
+  const raw = USE_MOCK
+    ? await request<Record<string, unknown>>(MOCK_ROUTE_URLS[body.scenario])
+    : await request<Record<string, unknown>>("/api/route", post(body));
   if (raw?.status === "error") {
-    throw new Error(raw.message ?? "Backend returned an error");
+    throw new Error(typeof raw.message === "string" ? raw.message : "Backend returned an error");
   }
-  return normalizeRoute(raw, request);
+  return normalizeRoute(raw, body);
 }
 
 // Fill gaps in a possibly partial response so components can rely on its shape.

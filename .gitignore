@@ -205,3 +205,10 @@ Desktop.ini
 !backend/data/graphs/demo_region.graphml
 # OSMnx HTTP cache
 cache/
+
+# Analysed regions: only the committed presets; areas users analyse at runtime stay local.
+backend/data/regions/*
+!backend/data/regions/abbotsford-2021/
+!backend/data/regions/emilia-romagna-2023/
+!backend/data/regions/*/graph.graphml
+backend/data/regions/*/raster/

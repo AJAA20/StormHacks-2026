@@ -2,8 +2,10 @@
 import osmnx as ox
 from pathlib import Path
 
-GRAPH_DIR = Path(__file__).parent.parent / "data" / "graphs"
-GRAPH_PATH = GRAPH_DIR / "demo_region.graphml"
+# The demo graph now lives in the Abbotsford preset region folder (what graph_loader loads).
+# New areas get their graph from backend/regions/builder.py.
+GRAPH_DIR = Path(__file__).parent.parent / "data" / "regions" / "abbotsford-2021"
+GRAPH_PATH = GRAPH_DIR / "graph.graphml"
 
 # Demo region = Abbotsford / Sumas Prairie: the same bbox the Sentinel-2 flood
 # polygons were computed for (Nov 2021 flood). osmnx v2 order: (west, south, east, north).
@@ -18,7 +20,7 @@ DEMO_PLACES = {
 
 
 def download_demo_region(path: Path = GRAPH_PATH) -> None:
-    """Download the demo bbox and save it as demo_region.graphml (what graph_loader loads)."""
+    """Download the demo bbox into the Abbotsford preset folder (what graph_loader loads)."""
     GRAPH_DIR.mkdir(parents=True, exist_ok=True)
     print(f"Downloading road network for bbox: {DEMO_BBOX}")
     G = ox.graph_from_bbox(DEMO_BBOX, network_type="drive")

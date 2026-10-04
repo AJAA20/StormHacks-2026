@@ -11,7 +11,7 @@ export default function StatusBanner({ loading, error, onRetry }: Props) {
   if (error) {
     return (
       <div className={`${styles.banner} ${styles.error}`} role="alert">
-        <span>Couldn&apos;t load evacuation route: {error}</span>
+        <span>{error}</span>
         <button type="button" className={styles.retry} onClick={onRetry}>
           Retry
         </button>
