@@ -14,11 +14,18 @@ type Props = {
   // null draws nothing (field missing from the response).
   data: RouteFeature | null;
   visible: boolean;
+  // false: the active route before analysis (solid). true: blocked by flooding (grey dashed).
+  compromised: boolean;
 };
 
-// Pre-flood route as a dashed grey line (architecture.md §9). A dark casing
-// underneath keeps it legible over satellite imagery.
-export default function OriginalRouteLayer({ map, data, visible }: Props) {
+const CURRENT_COLOR = "#38bdf8";
+const COMPROMISED_COLOR = "#d1d5db";
+const COMPROMISED_DASH = [2, 1.5];
+
+// Pre-flood route: solid blue while it is the current route, dashed grey once
+// flooding makes it unsafe (architecture.md §9). A dark casing underneath
+// keeps it legible over satellite imagery.
+export default function OriginalRouteLayer({ map, data, visible, compromised }: Props) {
   useEffect(() => {
     const geojson = data ?? EMPTY_COLLECTION;
     const source = map.getSource<GeoJSONSource>(SOURCE_ID);
@@ -44,15 +51,18 @@ export default function OriginalRouteLayer({ map, data, visible }: Props) {
         type: "line",
         source: SOURCE_ID,
         layout: { "line-join": "round" },
-        paint: {
-          "line-color": "#d1d5db",
-          "line-width": 4,
-          "line-dasharray": [2, 1.5],
-        },
+        paint: { "line-color": CURRENT_COLOR, "line-width": 4 },
       },
       LAYER_SLOTS.route,
     );
   }, [map, data]);
+
+  useEffect(() => {
+    const line = LAYER_IDS[1];
+    map.setPaintProperty(line, "line-color", compromised ? COMPROMISED_COLOR : CURRENT_COLOR);
+    // undefined resets to the default solid line.
+    map.setPaintProperty(line, "line-dasharray", compromised ? COMPROMISED_DASH : undefined);
+  }, [map, compromised]);
 
   useEffect(() => {
     for (const id of LAYER_IDS) {
