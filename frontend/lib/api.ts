@@ -16,10 +16,22 @@ export type FloodPolygons = FeatureCollection<Polygon | MultiPolygon>;
 // A route as a single LineString Feature, matching `route_geojson` (§8).
 export type RouteFeature = Feature<LineString>;
 
+// SatRelief's rating of the observed flood, from the area of new water (backend/routing/impact.py).
+export type ImpactLevel = "none" | "low" | "moderate" | "severe";
+export type FloodImpact = {
+  level: ImpactLevel;
+  new_water_km2: number;
+  flooded_roads: number;
+  basis: string;
+};
+
 // Road edges that intersect flood polygons (§7 road state FLOODED).
 export type FloodedRoads = FeatureCollection<LineString>;
 
+// Water-detection level sent to the backend. The app always uses the standard one
+// ("severe" = MNDWI > 0.0); the impact rating, not the user, says how bad a flood is.
 export type Scenario = "low" | "moderate" | "severe";
+export const DETECTION_LEVEL: Scenario = "severe";
 
 // [west, south, east, north] in degrees.
 export type BBox = [number, number, number, number];
@@ -120,6 +132,7 @@ export type RouteResponse = {
   original_route_geojson: RouteFeature | null;
   flood_polygons_geojson: FloodPolygons | null;
   flooded_roads_geojson: FloodedRoads | null;
+  flood_impact: FloodImpact | null;
 };
 
 // Drawn by a layer whose data is null, so stale shapes are cleared.
@@ -234,7 +247,13 @@ function normalizeRoute(raw: Record<string, unknown>, request: RouteRequest): Ro
     original_route_geojson: geojson<RouteFeature>(raw.original_route_geojson),
     flood_polygons_geojson: geojson<FloodPolygons>(raw.flood_polygons_geojson),
     flooded_roads_geojson: geojson<FloodedRoads>(raw.flooded_roads_geojson),
+    flood_impact: impact(raw.flood_impact),
   };
+}
+
+function impact(v: unknown): FloodImpact | null {
+  const i = v as Partial<FloodImpact> | null;
+  return i && typeof i.level === "string" && typeof i.new_water_km2 === "number" ? (i as FloodImpact) : null;
 }
 
 function num(v: unknown): number | null {

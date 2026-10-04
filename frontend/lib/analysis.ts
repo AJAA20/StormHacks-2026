@@ -30,7 +30,7 @@ export function buildSteps(r: RouteResponse): AnalysisStep[] {
     { label: "Loading Sentinel-2 flood extent", detail: null, reveals: null, durationMs: 1400 },
     {
       label: "Flood detected",
-      detail: floodAreas === null ? null : plural(floodAreas, "flood area"),
+      detail: floodDetail(r, floodAreas),
       reveals: "flood",
       durationMs: 1000,
     },
@@ -70,6 +70,16 @@ export function buildSteps(r: RouteResponse): AnalysisStep[] {
     { label: "Evacuation route updated", detail: distance(r), reveals: "safeRoute", durationMs: 0 },
   );
   return steps;
+}
+
+// e.g. "166 flood areas · 27.6 km², severe impact"
+function floodDetail(r: RouteResponse, floodAreas: number | null) {
+  const parts = [];
+  if (floodAreas !== null) parts.push(plural(floodAreas, "flood area"));
+  if (r.flood_impact) {
+    parts.push(`${r.flood_impact.new_water_km2.toFixed(1)} km², ${r.flood_impact.level} impact`);
+  }
+  return parts.length ? parts.join(" · ") : null;
 }
 
 function plural(n: number, noun: string) {

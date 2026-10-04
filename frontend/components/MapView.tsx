@@ -14,11 +14,11 @@ import OriginalRouteLayer from "./OriginalRouteLayer";
 import PointControls, { type PickMode } from "./PointControls";
 import SafeRouteLayer from "./SafeRouteLayer";
 import SatelliteOverlayLayer from "./SatelliteOverlayLayer";
-import ScenarioControls from "./ScenarioControls";
 import StatusBanner from "./StatusBanner";
 import StatusPanel from "./StatusPanel";
 import { buildSteps, isRouteAffected, type AnalysisStep, type Reveal } from "@/lib/analysis";
 import {
+  DETECTION_LEVEL,
   getRoute,
   listRegions,
   USE_MOCK,
@@ -27,7 +27,6 @@ import {
   type Job,
   type Region,
   type RouteResponse,
-  type Scenario,
 } from "@/lib/api";
 import {
   LAYER_SLOTS,
@@ -53,7 +52,6 @@ export default function MapView() {
   const containerRef = useRef<HTMLDivElement>(null);
   // Set once the style has loaded, so data layers can be added safely.
   const [map, setMap] = useState<maplibregl.Map | null>(null);
-  const [scenario, setScenario] = useState<Scenario>("severe");
   const [route, setRoute] = useState<RouteResponse | null>(null);
   const [visibility, setVisibility] = useState<LayerVisibility>({
     flood: true,
@@ -97,11 +95,6 @@ export default function MapView() {
 
   const toggleLayer = (key: LayerKey) =>
     setVisibility((v) => ({ ...v, [key]: !v[key] }));
-
-  const selectScenario = (next: Scenario) => {
-    if (next === scenario) return;
-    setScenario(next);
-  };
 
   const runAnalysis = () => {
     if (!route) return;
@@ -224,7 +217,7 @@ export default function MapView() {
 
   // Each distinct request has a key; it is loading until a result with that key
   // arrives. The previous route stays on screen meanwhile.
-  const routeKey = regionId && start && end ? JSON.stringify([regionId, start, end, scenario, attempt]) : null;
+  const routeKey = regionId && start && end ? JSON.stringify([regionId, start, end, attempt]) : null;
   const [result, setResult] = useState<{ key: string; error: string | null } | null>(null);
   const loading = routeKey !== null && result?.key !== routeKey;
   const routeError = routeKey !== null && result?.key === routeKey ? result.error : null;
@@ -232,7 +225,7 @@ export default function MapView() {
   useEffect(() => {
     if (!routeKey || !regionId || !start || !end) return;
     let cancelled = false;
-    getRoute({ start_coords: start, end_coords: end, scenario, region_id: regionId })
+    getRoute({ start_coords: start, end_coords: end, scenario: DETECTION_LEVEL, region_id: regionId })
       .then((data) => {
         if (cancelled) return;
         setRoute(data);
@@ -249,7 +242,7 @@ export default function MapView() {
     return () => {
       cancelled = true;
     };
-  }, [routeKey, regionId, start, end, scenario]);
+  }, [routeKey, regionId, start, end]);
 
   // Advance one step at a time; the last step completes the sequence.
   useEffect(() => {
@@ -267,7 +260,7 @@ export default function MapView() {
   );
   const shows = (reveal: Reveal) =>
     phase === "complete" || (phase === "analysing" && reached.has(reveal));
-  // After the sequence, follow the loaded data so scenario switches update instantly.
+  // After the sequence, follow the loaded data so new results update instantly.
   const routeCompromised =
     route !== null && (phase === "complete" ? isRouteAffected(route) : shows("compromised"));
 
@@ -433,7 +426,6 @@ export default function MapView() {
       )}
       <StatusPanel
         data={route}
-        scenario={scenario}
         showMetrics={phase === "complete"}
         legend={
           <LayerControls
@@ -459,11 +451,6 @@ export default function MapView() {
         {region && (
           <>
             <PointControls mode={pickMode} onModeChange={setPickMode} hasStart={start !== null} hasEnd={end !== null} />
-            <ScenarioControls
-              value={scenario}
-              onChange={selectScenario}
-              disabled={loading || phase === "analysing"}
-            />
             {route && (
               <AnalysisSteps
                 phase={phase}

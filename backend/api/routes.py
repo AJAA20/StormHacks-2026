@@ -10,7 +10,8 @@ router = APIRouter()
 class RouteRequest(BaseModel):
     start_coords: list[float]  # [lng, lat]
     end_coords: list[float]    # [lng, lat]
-    # Flood scenario from the UI; each maps to a satellite flood layer of the region
+    # Water-detection level. The app uses the default (MNDWI > 0.0, the standard threshold);
+    # "low"/"moderate" read the same image more strictly and are kept for comparisons.
     scenario: Literal["low", "moderate", "severe"] = "severe"
     # Which analysed area to route in (GET /api/regions); default = Abbotsford preset
     region_id: str = PRESET_ID

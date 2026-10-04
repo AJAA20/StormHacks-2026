@@ -43,7 +43,10 @@ Open http://localhost:3000.
    date/time, and for historical views the date you asked for.
 5. **Route**: drag the start / destination markers or click *Move start* / *Move destination* and click the map.
    **Run analysis** steps through flood → flooded roads → compromised route → safe route.
-6. **Low / Moderate / Severe**: the same image thresholded more or less strictly (MNDWI 0.30 / 0.15 / 0.00).
+6. **Flood impact** (in the results): SatRelief rates each observation by the area of new water Sentinel-2
+   detected — under 0.5 km² *None*, 0.5–5 *Low*, 5–20 *Moderate*, over 20 *Severe*. It is SatRelief's own
+   summary, not an official warning level or a water-depth measurement. Water is detected with the standard
+   MNDWI > 0 threshold.
 
 ## Test
 

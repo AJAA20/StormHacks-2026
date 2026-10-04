@@ -68,7 +68,10 @@ def test_presets(base: str) -> None:
                                              f"{d.get('flooded_edges')} flooded roads" if ok else r.text[:120])
             counts.append(d.get("flooded_edges") or 0)
         check(counts[0] < counts[1] < counts[2], "worse flood -> more flooded roads", str(counts))
-        check((d.get("detour_added_km") or 0) > 0, "severe flood forces a detour", f"+{d.get('detour_added_km')} km")
+        check((d.get("detour_added_km") or 0) > 0, "flood forces a detour", f"+{d.get('detour_added_km')} km")
+        impact = d.get("flood_impact") or {}
+        check(impact.get("level") == "severe", "flood impact rated severe",
+              f"{impact.get('level')}, {impact.get('new_water_km2')} km² new water")
 
     print("\n2. Error handling")
     r = route(base, "abbotsford-2021", [0, 0], [-122.2852, 49.0824])

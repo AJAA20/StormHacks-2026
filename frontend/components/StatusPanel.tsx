@@ -1,9 +1,8 @@
 import type { ReactNode } from "react";
-import { USE_MOCK, type RouteResponse, type Scenario } from "@/lib/api";
+import { USE_MOCK, type ImpactLevel, type RouteResponse } from "@/lib/api";
 import styles from "./StatusPanel.module.css";
 
 type Props = {
-  scenario: Scenario;
   // null until the first route response arrives.
   data: RouteResponse | null;
   // Hidden until the analysis has run.
@@ -14,7 +13,8 @@ type Props = {
 };
 
 // The map sheet: title block, controls, route metrics (architecture.md §9) and legend.
-export default function StatusPanel({ scenario, data, showMetrics, children, legend }: Props) {
+export default function StatusPanel({ data, showMetrics, children, legend }: Props) {
+  const impact = data?.flood_impact ?? null;
   return (
     <aside className={styles.sheet}>
       <header className={styles.section}>
@@ -22,7 +22,11 @@ export default function StatusPanel({ scenario, data, showMetrics, children, leg
         <h1 className={styles.title}>Flood evacuation map</h1>
         {/* The area and its Sentinel-2 scene date are shown by the area selector below. */}
         <p className={styles.meta}>
-          <span className={styles.scenario}>{scenario}</span> flood scenario
+          {showMetrics && impact ? (
+            <><span className={styles.scenario}>{IMPACT_LABEL[impact.level]}</span> flood impact</>
+          ) : (
+            "Satellite flood analysis"
+          )}
           {USE_MOCK && " · mock data, not satellite-derived"}
         </p>
       </header>
@@ -31,6 +35,18 @@ export default function StatusPanel({ scenario, data, showMetrics, children, leg
 
       {showMetrics && data && (
         <dl className={`${styles.section} ${styles.rows}`}>
+          {impact && (
+            <>
+              <div className={styles.row}>
+                <dt>Flood impact</dt>
+                <dd className={IMPACT_CLASS[impact.level]}>{IMPACT_LABEL[impact.level]}</dd>
+              </div>
+              <div className={styles.row}>
+                <dt>New water detected</dt>
+                <dd>{impact.new_water_km2.toFixed(1)} km²</dd>
+              </div>
+            </>
+          )}
           <div className={styles.row}>
             <dt>Route</dt>
             <dd className={statusClass(data)}>{statusText(data)}</dd>
@@ -51,6 +67,7 @@ export default function StatusPanel({ scenario, data, showMetrics, children, leg
             <dt>On original route</dt>
             <dd>{data.flooded_edges_avoided ?? "—"}</dd>
           </div>
+          {impact && <p className={styles.basis}>{impact.basis}</p>}
         </dl>
       )}
 
@@ -58,6 +75,20 @@ export default function StatusPanel({ scenario, data, showMetrics, children, leg
     </aside>
   );
 }
+
+const IMPACT_LABEL: Record<ImpactLevel, string> = {
+  none: "None",
+  low: "Low",
+  moderate: "Moderate",
+  severe: "Severe",
+};
+
+const IMPACT_CLASS: Record<ImpactLevel, string> = {
+  none: styles.ok,
+  low: styles.ok,
+  moderate: styles.warn,
+  severe: styles.alert,
+};
 
 // Only claim a reroute when the response confirms one.
 function isRerouted(d: RouteResponse) {

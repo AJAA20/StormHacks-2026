@@ -83,3 +83,15 @@
 .alert {
   color: var(--alert);
 }
+
+.warn {
+  color: #b15928;
+}
+
+/* How the flood impact rating is derived (shown under the results). */
+.basis {
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--ink-muted);
+}

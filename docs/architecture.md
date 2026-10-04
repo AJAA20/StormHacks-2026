@@ -759,15 +759,21 @@ Represents the current calculated evacuation route.
 
 ## Controls
 
-Initial scenario controls:
+The user does not choose a flood scenario. Water is detected with the standard MNDWI > 0 threshold,
+and the backend reports a **flood impact rating** with every route (`flood_impact` in `/api/route`):
 
 ```text
-Low
-Moderate
-Severe
+New water detected   Rating
+< 0.5 km²            None
+0.5 – 5 km²          Low
+5 – 20 km²           Moderate
+> 20 km²             Severe
 ```
 
-These should be described as flood scenarios unless the system is actually modeling physical water depth.
+The rating is SatRelief's own summary of the satellite observation (new water only; permanent water is
+removed using a dry-weather baseline), not an official flood warning level and not a water-depth model.
+The `scenario` request field still accepts `low` / `moderate` (stricter MNDWI thresholds 0.30 / 0.15)
+for comparisons, but the UI always uses the default.
 
 ---
 
@@ -776,6 +782,7 @@ These should be described as flood scenarios unless the system is actually model
 Display:
 
 ```text
+Flood Impact (None / Low / Moderate / Severe) and New Water Detected (km²)
 Route Status
 Route Distance
 Detour Added

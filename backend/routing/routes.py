@@ -12,6 +12,12 @@ from backend.routing.flood_intersection import (
 )
 from backend.routing.router import find_route, route_length_km
 from backend.routing.geojson import path_to_geojson
+from backend.routing.impact import flood_impact
+
+# The detection level the app uses: MNDWI > 0.0, the standard threshold in the literature.
+# (Stored as the "severe" flood file for historical reasons; the low/moderate files use
+# stricter thresholds and remain available through the API's `scenario` field.)
+STANDARD_SCENARIO = "severe"
 
 # Graphs are shared and apply_flood_blocking mutates their weights, so two requests
 # must not interleave.
@@ -47,7 +53,7 @@ def _flooded_edges_on(G, path) -> int:
 def compute_route(
     start_coords: tuple[float, float],
     end_coords: tuple[float, float],
-    scenario: str = "severe",
+    scenario: str = STANDARD_SCENARIO,
     region_id: str = PRESET_ID,
 ) -> dict:
     """Raises RegionNotFound (unknown region) or PointOutsideRegion (bad start/end)."""
@@ -82,6 +88,7 @@ def compute_route(
             "flood_polygons_geojson": flood_geojson,
             "flooded_roads_geojson": _flooded_roads_geojson(edges_gdf, flooded_mask),
             "flood_source": flood_path.name,
+            "flood_impact": flood_impact(flood_gdf, flood_geojson, flooded_count),
         }
 
         if path is None:

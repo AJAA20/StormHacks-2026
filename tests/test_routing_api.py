@@ -88,3 +88,17 @@ def test_highway_1_is_flooded_in_severe_scenario(client):
 def test_bad_scenario_is_rejected(client):
     r = client.post("/api/route", json={"start_coords": START, "end_coords": END, "scenario": "apocalyptic"})
     assert r.status_code == 422
+
+
+def test_flood_impact_rating_is_reported(client):
+    d = post(client, "severe")
+    impact = d["flood_impact"]
+    assert impact["level"] == "severe"  # ~27.6 km2 of new water on Sumas Prairie, Nov 2021
+    assert 20 < impact["new_water_km2"] < 40
+    assert impact["flooded_roads"] == d["flooded_edges"]
+    assert "not an official" in impact["basis"]
+
+
+def test_default_detection_level_is_the_standard_one(client):
+    r = client.post("/api/route", json={"start_coords": START, "end_coords": END})
+    assert r.json()["scenario"] == "severe" and r.json()["flood_source"] == "severe.geojson"
