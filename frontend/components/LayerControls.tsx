@@ -2,7 +2,7 @@ import type { CSSProperties } from "react";
 import { MAP_COLORS } from "@/lib/theme";
 import styles from "./LayerControls.module.css";
 
-export type LayerKey = "flood" | "floodedRoads" | "originalRoute" | "safeRoute";
+export type LayerKey = "flood" | "floodedRoads" | "originalRoute" | "safeRoute" | "satellite";
 export type LayerVisibility = Record<LayerKey, boolean>;
 
 const line = (color: string): CSSProperties => ({ height: 4, background: color });
@@ -39,6 +39,11 @@ export default function LayerControls({ visibility, onToggle, routeCompromised }
         background: MAP_COLORS.floodFill,
         opacity: 0.85,
       },
+    },
+    {
+      key: "satellite",
+      label: "Sentinel-2 image (flood date)",
+      swatch: { height: 12, background: "linear-gradient(135deg, #3f6212, #a16207 55%, #78716c)" },
     },
   ];
 

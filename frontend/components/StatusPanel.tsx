@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { USE_MOCK, type RouteResponse, type Scenario } from "@/lib/api";
-import { DEMO_PLACE, IMAGERY_SOURCE } from "@/lib/config";
 import styles from "./StatusPanel.module.css";
 
 type Props = {
@@ -9,7 +8,7 @@ type Props = {
   data: RouteResponse | null;
   // Hidden until the analysis has run.
   showMetrics: boolean;
-  // Scenario selector and analysis controls.
+  // Area, route point, scenario and analysis controls.
   children?: ReactNode;
   legend: ReactNode;
 };
@@ -21,10 +20,10 @@ export default function StatusPanel({ scenario, data, showMetrics, children, leg
       <header className={styles.section}>
         <p className={styles.brand}>SatRelief</p>
         <h1 className={styles.title}>Flood evacuation map</h1>
-        <p className={styles.meta}>{DEMO_PLACE}</p>
+        {/* The area and its Sentinel-2 scene date are shown by the area selector below. */}
         <p className={styles.meta}>
-          {USE_MOCK ? "Mock data, not satellite-derived" : IMAGERY_SOURCE} ·{" "}
-          <span className={styles.scenario}>{scenario}</span> scenario
+          <span className={styles.scenario}>{scenario}</span> flood scenario
+          {USE_MOCK && " · mock data, not satellite-derived"}
         </p>
       </header>
 

@@ -1,0 +1,243 @@
+/* Shared styles for the sheet's controls (area, route points, new-area form).
+   Matches the paper map sheet: ink borders, square corners, sentence-case labels. */
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.label {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.heading {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.headingRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.meta {
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--ink-muted);
+}
+
+.warning {
+  padding-left: 8px;
+  border-left: 3px solid #b15928;
+  font-size: 13px;
+  line-height: 1.35;
+  color: #7a3d14;
+}
+
+.error {
+  padding: 6px 8px;
+  border-left: 4px solid var(--alert);
+  background: #f6e7e5;
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--alert);
+}
+
+.select,
+.input {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--ink);
+  border-radius: 0;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+}
+
+.input::placeholder {
+  color: #9a968c;
+}
+
+.input:focus,
+.select:focus {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
+}
+
+.fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: none;
+}
+
+.fieldset:disabled {
+  opacity: 0.6;
+}
+
+.pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.searchRow {
+  display: flex;
+  gap: 6px;
+}
+
+.results {
+  display: flex;
+  flex-direction: column;
+  max-height: 140px;
+  overflow-y: auto;
+  border: 1px solid var(--ink);
+  background: #fff;
+  list-style: none;
+}
+
+.result {
+  width: 100%;
+  padding: 5px 8px;
+  border: none;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.result + .result,
+.results li + li {
+  border-top: 1px solid var(--hairline);
+}
+
+.result:hover {
+  background: #ece9e0;
+}
+
+.primary,
+.secondary,
+.small,
+.pick,
+.pickActive {
+  border: 1px solid var(--ink);
+  border-radius: 0;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.primary {
+  padding: 8px 0;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 15px;
+}
+
+.primary:hover:not(:disabled) {
+  background: #000;
+}
+
+.secondary {
+  padding: 6px 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.secondary:hover:not(:disabled),
+.small:hover:not(:disabled),
+.pick:hover {
+  background: #ece9e0;
+}
+
+.small {
+  padding: 0 10px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.pick,
+.pickActive {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 4px;
+  font-size: 13px;
+}
+
+.pick {
+  background: transparent;
+  color: var(--ink);
+}
+
+.pickActive {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* Same colours as the map markers (lib/theme.ts). */
+.dotStart,
+.dotEnd {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.dotStart {
+  background: #6a3d9a;
+}
+
+.dotEnd {
+  background: #33a02c;
+}
+
+.link {
+  align-self: flex-start;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.primary:disabled,
+.secondary:disabled,
+.small:disabled,
+.link:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.progress {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.progressBar {
+  height: 6px;
+  overflow: hidden;
+  border: 1px solid var(--ink);
+  background: #fff;
+}
+
+.progressBar span {
+  display: block;
+  height: 100%;
+  background: var(--ink);
+  transition: width 0.4s ease;
+}

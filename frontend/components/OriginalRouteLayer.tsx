@@ -20,6 +20,8 @@ type Props = {
 };
 
 const COMPROMISED_DASH = [2, 1.5];
+// An explicit solid pattern: resetting the dash to undefined is not reliably applied.
+const SOLID = [1, 0];
 
 // Pre-flood route: solid orange while it is the current route, dashed grey once
 // flooding makes it unsafe (architecture.md §9). A dark casing underneath
@@ -50,7 +52,7 @@ export default function OriginalRouteLayer({ map, data, visible, compromised }: 
         type: "line",
         source: SOURCE_ID,
         layout: { "line-join": "round" },
-        paint: { "line-color": MAP_COLORS.routeCurrent, "line-width": 4 },
+        paint: { "line-color": MAP_COLORS.routeCurrent, "line-width": 4, "line-dasharray": SOLID },
       },
       LAYER_SLOTS.route,
     );
@@ -59,8 +61,7 @@ export default function OriginalRouteLayer({ map, data, visible, compromised }: 
   useEffect(() => {
     const line = LAYER_IDS[1];
     map.setPaintProperty(line, "line-color", compromised ? MAP_COLORS.routeBlocked : MAP_COLORS.routeCurrent);
-    // undefined resets to the default solid line.
-    map.setPaintProperty(line, "line-dasharray", compromised ? COMPROMISED_DASH : undefined);
+    map.setPaintProperty(line, "line-dasharray", compromised ? COMPROMISED_DASH : SOLID);
   }, [map, compromised]);
 
   useEffect(() => {

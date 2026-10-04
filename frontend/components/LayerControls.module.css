@@ -27,3 +27,9 @@
   flex-shrink: 0;
   width: 24px;
 }
+
+.swatchSatellite {
+  height: 14px;
+  border-radius: 2px;
+  background: linear-gradient(135deg, #3f6212, #a16207 55%, #78716c);
+}

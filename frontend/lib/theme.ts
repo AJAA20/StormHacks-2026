@@ -15,4 +15,6 @@ export const MAP_COLORS = {
   // Purple: not used by any data layer, and visible on satellite imagery.
   startMarker: "#6a3d9a",
   endMarker: "#33a02c",
+  // Dashed outline of an area about to be analysed ("Analyze a new area").
+  analysisArea: "#ff7f00",
 } as const;

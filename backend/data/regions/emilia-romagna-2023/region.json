@@ -1,0 +1,77 @@
+{
+  "id": "emilia-romagna-2023",
+  "name": "Conselice, Emilia-Romagna, Italy (May 2023)",
+  "bbox": [
+    11.76,
+    44.46,
+    11.94,
+    44.58
+  ],
+  "center": [
+    11.85,
+    44.519999999999996
+  ],
+  "preset": true,
+  "flood_dates": "2023-05-17/2023-06-05",
+  "preflood_dates": "2023-01-17/2023-05-03",
+  "flood_scene": {
+    "id": "S2A_T32TQQ_20230523T100828_L2A",
+    "date": "2023-05-23",
+    "aoi_clear_pct": 100.0
+  },
+  "preflood_scene": {
+    "id": "S2A_T32TQQ_20230212T101131_L2A",
+    "date": "2023-02-12",
+    "aoi_clear_pct": 100.0
+  },
+  "scenarios": {
+    "low": {
+      "threshold": 0.3,
+      "polygons": 109,
+      "area_km2": 19.49,
+      "path": "low.geojson"
+    },
+    "moderate": {
+      "threshold": 0.15,
+      "polygons": 109,
+      "area_km2": 23.52,
+      "path": "moderate.geojson"
+    },
+    "severe": {
+      "threshold": 0.0,
+      "polygons": 108,
+      "area_km2": 28.44,
+      "path": "severe.geojson"
+    }
+  },
+  "overlay_corners": [
+    [
+      11.754280527902779,
+      44.58448675605713
+    ],
+    [
+      11.9460067545953,
+      44.58448675605713
+    ],
+    [
+      11.9460067545953,
+      44.45549881239914
+    ],
+    [
+      11.754280527902779,
+      44.45549881239914
+    ]
+  ],
+  "default_start": [
+    11.8212,
+    44.5024
+  ],
+  "default_end": [
+    11.8801,
+    44.5475
+  ],
+  "road_edges": 2648,
+  "warnings": [],
+  "created_at": 1791075182.274179,
+  "source": "Sentinel-2 L2A (Copernicus) via Earth Search; roads (c) OpenStreetMap"
+}

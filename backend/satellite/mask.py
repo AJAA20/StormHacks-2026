@@ -8,10 +8,11 @@ FLOODED, DRY, NODATA = 1, 0, 255
 
 # Sentinel-2 L2A Scene Classification (SCL) codes we cannot trust:
 #   0 no data, 1 saturated/defective, 3 cloud shadow,
-#   8 cloud medium prob., 9 cloud high prob., 10 thin cirrus.
-# (6 = water, 4 = vegetation, 5 = bare soil, 7 = unclassified, 11 = snow are kept.)
-# Cloud shadows are dark in SWIR and can look like water, so they are masked too.
-SCL_INVALID_CLASSES = (0, 1, 3, 8, 9, 10)
+#   8 cloud medium prob., 9 cloud high prob., 10 thin cirrus, 11 snow/ice.
+# (6 = water, 4 = vegetation, 5 = bare soil, 7 = unclassified are kept.)
+# Cloud shadows are dark in SWIR, and snow is bright in green but dark in SWIR,
+# so both give water-like MNDWI and are masked too.
+SCL_INVALID_CLASSES = (0, 1, 3, 8, 9, 10, 11)
 
 
 def dilate(mask: np.ndarray, pixels: int) -> np.ndarray:
