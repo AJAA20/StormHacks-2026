@@ -15,6 +15,7 @@ from dataclasses import asdict, dataclass, field
 
 from backend.regions import builder
 from backend.regions.store import region_exists
+from backend.api.ws import broadcast
 
 log = logging.getLogger(__name__)
 
@@ -64,6 +65,7 @@ def submit(region_id: str, name: str, bbox, flood_dates: str, preflood_dates: st
         try:
             builder.build_region(region_id, name, bbox, flood_dates, preflood_dates, progress=progress)
             job.status, job.stage, job.progress = "done", "Done", 1.0
+            broadcast({"type": "flood_update", "region_id": region_id, "job_id": job.id})
         except builder.RegionBuildError as exc:
             job.status, job.error = "error", str(exc)
         except Exception as exc:  # network hiccups, OSM timeouts, ...

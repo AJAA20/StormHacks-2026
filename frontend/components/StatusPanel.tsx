@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { USE_MOCK, type RouteResponse, type Scenario } from "@/lib/api";
+import AudioDispatchBar from "./AudioDispatchBar";
 import styles from "./StatusPanel.module.css";
 
 type Props = {
@@ -52,6 +53,20 @@ export default function StatusPanel({ scenario, data, showMetrics, children, leg
             <dd>{data.flooded_edges_avoided ?? "—"}</dd>
           </div>
         </dl>
+      )}
+
+      {showMetrics && data && data.route_found && (
+        <div className={styles.section}>
+          <AudioDispatchBar
+            routeSummary={{
+              primary_blocked_road: data.flooded_roads_geojson?.features?.[0]?.properties?.name,
+              safe_detour_road: undefined,
+              flooded_edges_count: data.flooded_edges ?? 0,
+              detour_added_km: data.detour_added_km ?? undefined,
+              eta_minutes: undefined,
+            }}
+          />
+        </div>
       )}
 
       <div className={styles.section}>{legend}</div>
