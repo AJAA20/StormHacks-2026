@@ -35,7 +35,8 @@ Open http://localhost:3000.
 
 ## Using it
 
-1. **Latest available / Historical**: pick the mode at the top of the panel.
+1. **Latest available / Historical**: pick the tab at the top of the panel. Each tab keeps its own result;
+   the example flood events and historical views appear only under *Historical* (the app opens there).
 2. **Location**: search any place, or click *Use my location* (your browser asks for permission).
 3. **Date** (historical only), then **Analyze flood conditions**. New areas take ~15–40 s (internet needed);
    repeats and the examples are instant.

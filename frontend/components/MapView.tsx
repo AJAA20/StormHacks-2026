@@ -42,6 +42,15 @@ import { shortName, type SelectedLocation } from "@/lib/location";
 import { MAP_COLORS } from "@/lib/theme";
 import styles from "./MapView.module.css";
 
+// What one exploration tab is showing, kept while the other tab is open.
+type TabResult = {
+  view: FloodView;
+  regionId: string;
+  start: LngLat | null;
+  end: LngLat | null;
+  phase: Phase;
+};
+
 // Keep framed areas clear of the left control panel (280px + margins) on wide screens.
 function fitPadding(map: maplibregl.Map) {
   const wide = map.getContainer().clientWidth > 760;
@@ -64,7 +73,8 @@ export default function MapView() {
   });
 
   // Exploration inputs: mode, where (searched or device location) and, for history, when.
-  const [mode, setMode] = useState<ExplorationMode>("latest");
+  // Opens on Historical so the instant example flood is on screen.
+  const [mode, setMode] = useState<ExplorationMode>("historical");
   const [selectedLocation, setSelectedLocation] = useState<SelectedLocation | null>(null);
   const [requestedDate, setRequestedDate] = useState("");
   // What the map currently shows (mode, place, real observation date).
@@ -187,6 +197,29 @@ export default function MapView() {
     },
     [loadRegions, showRegion],
   );
+
+  // Each tab keeps its own result: switching tabs swaps what the map and header show,
+  // so historical floods never appear under "Latest available" (and vice versa).
+  const savedByMode = useRef<Partial<Record<ExplorationMode, TabResult>>>({});
+
+  const switchMode = (next: ExplorationMode) => {
+    if (next === mode) return;
+    if (view && regionId) {
+      savedByMode.current[mode] = { view, regionId, start, end, phase: phase === "analysing" ? "complete" : phase };
+    } else {
+      delete savedByMode.current[mode];
+    }
+    const saved = savedByMode.current[next];
+    setRoute(null);
+    setPickMode(null);
+    setError(null);
+    setView(saved?.view ?? null);
+    setRegionId(saved?.regionId ?? null);
+    setStart(saved?.start ?? null);
+    setEnd(saved?.end ?? null);
+    setPhase(saved?.phase ?? "before");
+    setMode(next);
+  };
 
   const retry = () => {
     setError(null);
@@ -437,7 +470,7 @@ export default function MapView() {
       >
         <ExplorePanel
           mode={mode}
-          onModeChange={setMode}
+          onModeChange={switchMode}
           location={selectedLocation}
           onLocationChange={selectLocation}
           requestedDate={requestedDate}
@@ -447,7 +480,15 @@ export default function MapView() {
           onExample={showExample}
           canAnalyze={!USE_MOCK}
         />
-        {view && <FloodViewHeader view={view} />}
+        {view ? (
+          <FloodViewHeader view={view} />
+        ) : (
+          <p className={styles.emptyHint}>
+            {mode === "latest"
+              ? "No latest analysis yet. Choose a location and press Analyze flood conditions to see what the most recent satellite observation shows."
+              : "Choose a location and a date, or open an example flood event."}
+          </p>
+        )}
         {region && (
           <>
             <PointControls mode={pickMode} onModeChange={setPickMode} hasStart={start !== null} hasEnd={end !== null} />

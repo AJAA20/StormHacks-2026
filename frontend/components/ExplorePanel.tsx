@@ -32,7 +32,7 @@ type Props = {
   onDateChange: (date: string) => void;
   // Called with the finished job (its details say which observation was used).
   onDone: (job: Job, mode: ExplorationMode, location: SelectedLocation, requestedDate: string | null) => void;
-  // Committed example flood events, shown instantly without a new analysis.
+  // Committed example flood events (historical tab only), shown instantly without a new analysis.
   examples: Region[];
   onExample: (region: Region) => void;
   // False in mock mode (no backend to analyse with).
@@ -147,7 +147,7 @@ export default function ExplorePanel({
         {running ? "Analysing…" : "Analyze flood conditions"}
       </button>
 
-      {examples.length > 0 && (
+      {mode === "historical" && examples.length > 0 && (
         <div className={styles.examples}>
           <span className={styles.meta}>Example flood events (instant):</span>
           {examples.map((r) => (
