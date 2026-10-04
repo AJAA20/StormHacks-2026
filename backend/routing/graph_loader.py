@@ -7,6 +7,7 @@ import networkx as nx
 GRAPH_PATH = Path(__file__).parent.parent / "data" / "graphs" / "demo_region.graphml"
 
 _graph: nx.MultiDiGraph | None = None
+_edges: gpd.GeoDataFrame | None = None
 
 
 def load_graph(path: Path = GRAPH_PATH) -> nx.MultiDiGraph:
@@ -18,6 +19,11 @@ def load_graph(path: Path = GRAPH_PATH) -> nx.MultiDiGraph:
 
 
 def get_edges_gdf(G: nx.MultiDiGraph) -> gpd.GeoDataFrame:
-    """Return road edges as a GeoDataFrame with LineString geometry (u, v, key index)."""
-    _, edges = ox.graph_to_gdfs(G, nodes=True, edges=True)
-    return edges
+    """Return road edges as a GeoDataFrame with LineString geometry (u, v, key index).
+
+    Cached: edge geometry never changes, only the weights we set on G.
+    """
+    global _edges
+    if _edges is None:
+        _, _edges = ox.graph_to_gdfs(G, nodes=True, edges=True)
+    return _edges

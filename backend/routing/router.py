@@ -18,9 +18,12 @@ def find_route(
     G: nx.MultiDiGraph,
     start_coords: tuple[float, float],
     end_coords: tuple[float, float],
+    weight: str = "weight",
 ) -> Optional[list[int]]:
     """
     start_coords / end_coords are (lng, lat). Returns list of node ids or None if unreachable.
+
+    weight="weight" avoids flooded edges; weight="length" ignores floods (the original route).
     """
     start_lng, start_lat = start_coords
     end_lng, end_lat = end_coords
@@ -34,10 +37,13 @@ def find_route(
             orig_node,
             dest_node,
             heuristic=haversine_heuristic(G),
-            weight="weight",
+            weight=weight,
         )
     except nx.NetworkXNoPath:
         return None
+
+    if weight != "weight":
+        return path
 
     # Safety check: ensure no blocked edge made it through (shouldn't, given BLOCK_WEIGHT)
     for u, v in zip(path[:-1], path[1:]):

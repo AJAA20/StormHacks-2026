@@ -3,14 +3,15 @@
 
 export type LngLat = [number, number];
 
-// Placeholder start/destination taken from the POST /api/route example in
-// docs/architecture.md (Sumas Prairie / Abbotsford, BC). Replace once the
-// team settles on the final demo locations.
-export const START_COORDS: LngLat = [-122.285, 49.102];
-export const END_COORDS: LngLat = [-122.15, 49.12];
+// Demo start/destination (Sumas Prairie / Abbotsford, BC). Chosen so the route
+// changes with each satellite flood scenario: south edge of Sumas Prairie ->
+// north Abbotsford. Roads only exist inside the demo bbox
+// (-122.32, 49.00, -122.10, 49.12), see backend/routing/download_graph.py.
+export const START_COORDS: LngLat = [-122.219, 49.024];
+export const END_COORDS: LngLat = [-122.2852, 49.0824];
 
-export const MAP_CENTER: LngLat = [-122.2175, 49.111];
-export const MAP_ZOOM = 11.5;
+export const MAP_CENTER: LngLat = [-122.235, 49.055];
+export const MAP_ZOOM = 12;
 
 // Satellite basemap (requires internet). If tiles fail to load, the map still
 // renders over the background colour so data layers remain visible.
