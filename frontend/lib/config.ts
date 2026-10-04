@@ -12,8 +12,8 @@ export const END_COORDS: LngLat = [-122.2852, 49.0824];
 export const MAP_CENTER: LngLat = [-122.235, 49.055];
 export const MAP_ZOOM = 12;
 
-// Largest area the "Analyze a new area" box may cover (backend limit is 30 km).
-export const MAX_AREA_KM = 25;
+// Side of the square analysed around a chosen location (matches backend AOI_KM).
+export const AOI_KM = 12;
 
 // Satellite basemap (requires internet). If tiles fail to load, the map still
 // renders over the background colour so data layers remain visible.

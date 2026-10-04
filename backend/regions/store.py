@@ -78,5 +78,5 @@ def public_summary(meta: dict) -> dict:
     """What the frontend needs (no local file paths)."""
     keys = ("id", "name", "bbox", "center", "preset", "flood_dates", "preflood_dates", "flood_scene",
             "preflood_scene", "scenarios", "overlay_corners", "default_start", "default_end",
-            "warnings", "created_at", "road_edges")
+            "warnings", "created_at", "road_edges", "source")
     return {k: meta.get(k) for k in keys}

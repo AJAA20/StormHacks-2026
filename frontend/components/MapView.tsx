@@ -4,14 +4,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import AnalysisSteps, { type Phase } from "./AnalysisSteps";
-import AnalyzeAreaPanel from "./AnalyzeAreaPanel";
 import AreaBoxLayer from "./AreaBoxLayer";
+import ExplorePanel from "./ExplorePanel";
 import FloodLayer from "./FloodLayer";
 import FloodedRoadLayer from "./FloodedRoadLayer";
+import FloodViewHeader, { type FloodView } from "./FloodViewHeader";
 import LayerControls, { type LayerKey, type LayerVisibility } from "./LayerControls";
 import OriginalRouteLayer from "./OriginalRouteLayer";
 import PointControls, { type PickMode } from "./PointControls";
-import RegionSelector from "./RegionSelector";
 import SafeRouteLayer from "./SafeRouteLayer";
 import SatelliteOverlayLayer from "./SatelliteOverlayLayer";
 import ScenarioControls from "./ScenarioControls";
@@ -23,6 +23,8 @@ import {
   listRegions,
   USE_MOCK,
   type BBox,
+  type ExplorationMode,
+  type Job,
   type Region,
   type RouteResponse,
   type Scenario,
@@ -30,13 +32,14 @@ import {
 import {
   LAYER_SLOTS,
   MAP_CENTER,
+  AOI_KM,
   MAP_ZOOM,
-  MAX_AREA_KM,
   SATELLITE_ATTRIBUTION,
   SATELLITE_TILES,
   type LngLat,
 } from "@/lib/config";
-import { clampBox, contains, sizeKm } from "@/lib/geo";
+import { boxAround, contains } from "@/lib/geo";
+import { shortName, type SelectedLocation } from "@/lib/location";
 import { MAP_COLORS } from "@/lib/theme";
 import styles from "./MapView.module.css";
 
@@ -62,6 +65,15 @@ export default function MapView() {
     satellite: false,
   });
 
+  // Exploration inputs: mode, where (searched or device location) and, for history, when.
+  const [mode, setMode] = useState<ExplorationMode>("latest");
+  const [selectedLocation, setSelectedLocation] = useState<SelectedLocation | null>(null);
+  const [requestedDate, setRequestedDate] = useState("");
+  // What the map currently shows (mode, place, real observation date).
+  const [view, setView] = useState<FloodView | null>(null);
+  // Orange preview of the area a new analysis will cover.
+  const [previewBox, setPreviewBox] = useState<BBox | null>(null);
+
   // Analysed areas (presets + user-analysed) and the one on screen.
   const [regions, setRegions] = useState<Region[]>([]);
   const [regionId, setRegionId] = useState<string | null>(null);
@@ -71,10 +83,6 @@ export default function MapView() {
   const [start, setStart] = useState<LngLat | null>(null);
   const [end, setEnd] = useState<LngLat | null>(null);
   const [pickMode, setPickMode] = useState<PickMode>(null);
-
-  // "Analyze a new area" form, and the area it would analyse (current view, capped).
-  const [analyzing, setAnalyzing] = useState(false);
-  const [areaBox, setAreaBox] = useState<BBox | null>(null);
 
   // UI errors (bad click, areas failed to load). Route errors come from the request below.
   const [error, setError] = useState<string | null>(null);
@@ -104,61 +112,113 @@ export default function MapView() {
 
   // ---- regions -------------------------------------------------------------
 
-  const showRegion = useCallback((next: Region) => {
+  const showRegion = useCallback((next: Region, startPoint: LngLat | null, endPoint: LngLat | null) => {
     setRegionId(next.id);
-    setStart(next.default_start);
-    setEnd(next.default_end);
-    setPickMode(next.default_start && next.default_end ? null : "start");
+    setStart(startPoint);
+    setEnd(endPoint);
+    setPickMode(startPoint && endPoint ? null : startPoint ? "end" : "start");
     setRoute(null);
     setPhase("before");
+    setPreviewBox(null);
   }, []);
 
-  const refreshRegions = useCallback(
-    (selectId?: string) => {
-      listRegions()
-        .then((list) => {
-          setRegions(list);
-          const target = list.find((r) => r.id === selectId) ?? (selectId ? null : list[0]);
-          if (target) showRegion(target);
-        })
-        .catch((err: unknown) => {
-          console.error(err);
-          setError(`Couldn't load areas: ${err instanceof Error ? err.message : String(err)}`);
-        });
+  const loadRegions = useCallback(
+    () =>
+      listRegions().then((list) => {
+        setRegions(list);
+        return list;
+      }),
+    [],
+  );
+
+  // Committed example event: a cached historical analysis, shown without a request.
+  const showExample = useCallback(
+    (region: Region) => {
+      setView({
+        mode: "historical",
+        example: true,
+        locationName: region.name,
+        requestedDate: null,
+        observation: region.flood_scene,
+        source: region.source ?? null,
+        note: "Example flood event: a cached analysis of this Sentinel-2 observation.",
+        warnings: region.warnings ?? [],
+      });
+      showRegion(region, region.default_start, region.default_end);
     },
     [showRegion],
   );
 
-  useEffect(() => {
-    refreshRegions();
-  }, [refreshRegions]);
+  const loadInitial = useCallback(() => {
+    loadRegions()
+      .then((list) => {
+        const first = list.find((r) => r.preset) ?? list[0];
+        if (first) showExample(first);
+      })
+      .catch((err: unknown) => {
+        console.error(err);
+        setError(`Couldn't load flood data: ${err instanceof Error ? err.message : String(err)}`);
+      });
+  }, [loadRegions, showExample]);
 
-  const selectRegion = (id: string) => {
-    const next = regions.find((r) => r.id === id);
-    if (next) showRegion(next);
-  };
+  useEffect(() => {
+    loadInitial();
+  }, [loadInitial]);
+
+  // A finished latest/historical analysis: show its region with the facts of this request.
+  const onAnalysisDone = useCallback(
+    (job: Job, doneMode: ExplorationMode, location: SelectedLocation, date: string | null) => {
+      loadRegions()
+        .then((list) => {
+          const region = list.find((r) => r.id === job.region_id);
+          if (!region) throw new Error("The analysed area could not be loaded.");
+          setView({
+            mode: doneMode,
+            example: false,
+            locationName: shortName(location.displayName),
+            requestedDate: date,
+            observation: region.flood_scene,
+            source: region.source ?? null,
+            note: job.details?.note ?? null,
+            warnings: region.warnings ?? [],
+          });
+          // Start at the user's own position, or at the searched place unless the area
+          // has a demo route; the destination is picked on the map if there is no default.
+          const point: LngLat = [location.longitude, location.latitude];
+          const inside = contains(region.bbox, point);
+          const startPoint =
+            location.source === "device" && inside ? point : (region.default_start ?? (inside ? point : null));
+          showRegion(region, startPoint, region.default_end);
+        })
+        .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)));
+    },
+    [loadRegions, showRegion],
+  );
 
   const retry = () => {
     setError(null);
-    if (regions.length === 0) refreshRegions();
+    if (regions.length === 0) loadInitial();
     else setAttempt((n) => n + 1);
   };
 
   // Frame the selected area (only when the area changes, not on every render).
   const regionKey = region?.id;
   useEffect(() => {
-    if (map && region && !analyzing) {
+    if (map && region) {
       map.fitBounds(region.bbox, { padding: fitPadding(map), duration: 800 });
     }
-  }, [map, regionKey, analyzing]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [map, regionKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const onAnalyzed = useCallback(
-    (newRegionId: string) => {
-      setAnalyzing(false);
-      refreshRegions(newRegionId);
-    },
-    [refreshRegions],
-  );
+  // A newly chosen location: centre the map and preview the area that will be analysed.
+  const selectLocation = (location: SelectedLocation) => {
+    setSelectedLocation(location);
+    setError(null);
+    const point: LngLat = [location.longitude, location.latitude];
+    const preset = regions.find((r) => r.preset && contains(r.bbox, point));
+    const box = preset ? preset.bbox : boxAround(point, AOI_KM);
+    setPreviewBox(box);
+    map?.fitBounds(box, { padding: fitPadding(map), duration: 1000 });
+  };
 
   // ---- route ---------------------------------------------------------------
 
@@ -320,46 +380,15 @@ export default function MapView() {
     ];
     for (const [marker, point] of pairs) {
       if (!marker) continue;
-      if (point && !analyzing) marker.setLngLat(point).addTo(map);
+      if (point) marker.setLngLat(point).addTo(map);
       else marker.remove();
     }
-  }, [map, start, end, analyzing, error]);
+  }, [map, start, end, error]);
 
   // Crosshair while picking a point.
   useEffect(() => {
     if (map) map.getCanvas().style.cursor = pickMode ? "crosshair" : "";
   }, [map, pickMode]);
-
-  // While the "Analyze a new area" form is open, the area is the visible map, capped.
-  useEffect(() => {
-    if (!map || !analyzing) return;
-    const update = () => {
-      // The part of the map not covered by the panel, minus the same margins fitBounds uses.
-      const { clientWidth: w, clientHeight: h } = map.getContainer();
-      const pad = fitPadding(map);
-      const nw = map.unproject([pad.left, pad.top]);
-      const se = map.unproject([w - pad.right, h - pad.bottom]);
-      setAreaBox(clampBox([nw.lng, se.lat, se.lng, nw.lat], MAX_AREA_KM));
-    };
-    update();
-    map.on("moveend", update);
-    return () => {
-      map.off("moveend", update);
-      setAreaBox(null);
-    };
-  }, [map, analyzing]);
-
-  const flyToBox = useCallback(
-    (box: BBox) => map?.fitBounds(clampBox(box, MAX_AREA_KM), { padding: fitPadding(map), duration: 1000 }),
-    [map],
-  );
-
-  const openAnalyze = () => {
-    setPickMode(null);
-    setAnalyzing(true);
-  };
-
-  const shown = !analyzing ? route : null;
 
   return (
     <>
@@ -368,42 +397,42 @@ export default function MapView() {
         <>
           <SatelliteOverlayLayer
             map={map}
-            regionId={analyzing ? null : regionId}
-            corners={analyzing ? null : (region?.overlay_corners ?? null)}
+            regionId={regionId}
+            corners={region?.overlay_corners ?? null}
             visible={visibility.satellite}
           />
           <AreaBoxLayer
             map={map}
             id="analysis-area"
-            box={areaBox}
+            box={previewBox}
             color={MAP_COLORS.analysisArea}
             fillOpacity={0.08}
           />
           <FloodLayer
             map={map}
-            data={shown?.flood_polygons_geojson ?? null}
+            data={route?.flood_polygons_geojson ?? null}
             visible={visibility.flood && shows("flood")}
           />
           <OriginalRouteLayer
             map={map}
-            data={shown?.original_route_geojson ?? null}
+            data={route?.original_route_geojson ?? null}
             visible={visibility.originalRoute}
             compromised={routeCompromised}
           />
           <FloodedRoadLayer
             map={map}
-            data={shown?.flooded_roads_geojson ?? null}
+            data={route?.flooded_roads_geojson ?? null}
             visible={visibility.floodedRoads && shows("floodedRoads")}
           />
           <SafeRouteLayer
             map={map}
-            data={shown?.route_geojson ?? null}
+            data={route?.route_geojson ?? null}
             visible={visibility.safeRoute && shows("safeRoute")}
           />
         </>
       )}
       <StatusPanel
-        data={shown}
+        data={route}
         scenario={scenario}
         showMetrics={phase === "complete"}
         legend={
@@ -414,24 +443,21 @@ export default function MapView() {
           />
         }
       >
-        {analyzing ? (
-          <AnalyzeAreaPanel
-            areaBox={areaBox}
-            areaKm={areaBox ? sizeKm(areaBox) : null}
-            onFlyTo={flyToBox}
-            onCancel={() => setAnalyzing(false)}
-            onDone={onAnalyzed}
-          />
-        ) : (
+        <ExplorePanel
+          mode={mode}
+          onModeChange={setMode}
+          location={selectedLocation}
+          onLocationChange={selectLocation}
+          requestedDate={requestedDate}
+          onDateChange={setRequestedDate}
+          onDone={onAnalysisDone}
+          examples={regions.filter((r) => r.preset)}
+          onExample={showExample}
+          canAnalyze={!USE_MOCK}
+        />
+        {view && <FloodViewHeader view={view} />}
+        {region && (
           <>
-            <RegionSelector
-              regions={regions}
-              value={regionId}
-              onChange={selectRegion}
-              onAnalyzeNew={openAnalyze}
-              canAnalyze={!USE_MOCK}
-              disabled={phase === "analysing"}
-            />
             <PointControls mode={pickMode} onModeChange={setPickMode} hasStart={start !== null} hasEnd={end !== null} />
             <ScenarioControls
               value={scenario}

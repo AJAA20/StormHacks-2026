@@ -17,12 +17,16 @@
   "flood_scene": {
     "id": "S2A_T32TQQ_20230523T100828_L2A",
     "date": "2023-05-23",
-    "aoi_clear_pct": 100.0
+    "datetime": "2023-05-23T10:18:28.166000+00:00",
+    "aoi_clear_pct": 100.0,
+    "mission": "Sentinel-2"
   },
   "preflood_scene": {
     "id": "S2A_T32TQQ_20230212T101131_L2A",
     "date": "2023-02-12",
-    "aoi_clear_pct": 100.0
+    "datetime": "2023-02-12T10:18:23.149000+00:00",
+    "aoi_clear_pct": 100.0,
+    "mission": "Sentinel-2"
   },
   "scenarios": {
     "low": {
@@ -72,6 +76,6 @@
   ],
   "road_edges": 2648,
   "warnings": [],
-  "created_at": 1791075182.274179,
-  "source": "Sentinel-2 L2A (Copernicus) via Earth Search; roads (c) OpenStreetMap"
+  "created_at": 1791081519.1427011,
+  "source": "Copernicus Sentinel-2 L2A via Earth Search (AWS Open Data)"
 }

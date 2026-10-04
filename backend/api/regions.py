@@ -2,13 +2,15 @@
 
 import threading
 import time
+from datetime import date
+from typing import Literal
 
 import requests
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
-from backend.regions import jobs
+from backend.regions import jobs, observations
 from backend.regions.builder import RegionBuildError, validate_request
 from backend.regions.store import (
     RegionNotFound,
@@ -65,6 +67,39 @@ def analyze(req: AnalyzeRequest):
     return jobs.submit(region_id, req.name.strip() or "Custom area", bbox, flood_dates, preflood_dates).public()
 
 
+class FloodAnalysisRequest(BaseModel):
+    """One request shape for both exploration modes; only the image selection differs."""
+    mode: Literal["latest", "historical"]
+    latitude: float = Field(..., ge=-85, le=85)
+    longitude: float = Field(..., ge=-180, le=180)
+    location_name: str = Field("Selected location", max_length=120)
+    requested_date: date | None = Field(None, description="Required for historical mode")
+
+
+@router.post("/api/flood-analysis")
+def flood_analysis(req: FloodAnalysisRequest):
+    """Latest-available or historical flood analysis around a location.
+
+    Returns a job; poll GET /api/flood-analysis/{job_id}. When done, `details` holds the mode,
+    requested date, actual satellite observation date and any note, and `region_id` is what
+    POST /api/route takes.
+    """
+    if req.mode == "historical":
+        if req.requested_date is None:
+            raise HTTPException(400, "Choose a date for the historical view.")
+        if req.requested_date < date(2015, 7, 1):
+            raise HTTPException(400, "Sentinel-2 observations start in mid-2015; choose a later date.")
+        if req.requested_date > date.today():
+            raise HTTPException(400, "The historical date can't be in the future.")
+    requested = req.requested_date if req.mode == "historical" else None
+    location = observations.Location(req.latitude, req.longitude, req.location_name.strip() or "Selected location")
+    key = f"{req.mode}:{req.latitude:.3f}:{req.longitude:.3f}:{requested or date.today()}"
+    job = jobs.submit_task(key, location.name,
+                           lambda progress: observations.analyze(req.mode, location, requested, progress))
+    return job.public()
+
+
+@router.get("/api/flood-analysis/{job_id}")
 @router.get("/api/analyze/{job_id}")
 def analyze_status(job_id: str):
     job = jobs.get_job(job_id)
@@ -76,32 +111,37 @@ def analyze_status(job_id: str):
 # --- place search (OpenStreetMap Nominatim) -----------------------------------
 # Proxied through the backend so we can send the identifying User-Agent the
 # Nominatim usage policy asks for, and keep to its 1 request/second limit.
-NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
+NOMINATIM_BASE = "https://nominatim.openstreetmap.org"
 USER_AGENT = "SatRelief/0.1 (StormHacks 2026 hackathon flood-routing demo)"
 _geocode_lock = threading.Lock()
 _last_geocode = 0.0
 
 
-@router.get("/api/geocode")
-def geocode(q: str):
+def _nominatim(path: str, params: dict) -> object:
+    """GET from Nominatim with its required User-Agent, at most one request per second."""
     global _last_geocode
-    q = q.strip()
-    if not q:
-        return []
     with _geocode_lock:
         wait = 1.0 - (time.time() - _last_geocode)
         if wait > 0:
             time.sleep(wait)
         try:
-            r = requests.get(NOMINATIM_URL, params={"q": q, "format": "jsonv2", "limit": 5},
+            r = requests.get(f"{NOMINATIM_BASE}/{path}", params={**params, "format": "jsonv2"},
                              headers={"User-Agent": USER_AGENT}, timeout=10)
             r.raise_for_status()
+            return r.json()
         except requests.RequestException:
             raise HTTPException(502, "Place search is unavailable right now. Pan the map to the area instead.") from None
         finally:
             _last_geocode = time.time()
+
+
+@router.get("/api/geocode")
+def geocode(q: str):
+    q = q.strip()
+    if not q:
+        return []
     results = []
-    for item in r.json():
+    for item in _nominatim("search", {"q": q, "limit": 5}):
         s, n, w, e = (float(v) for v in item["boundingbox"])
         results.append({
             "name": item["display_name"],
@@ -109,3 +149,11 @@ def geocode(q: str):
             "bbox": [w, s, e, n],
         })
     return results
+
+
+@router.get("/api/geocode/reverse")
+def reverse_geocode(lat: float, lon: float):
+    """Readable name for coordinates (e.g. the user's browser location)."""
+    item = _nominatim("reverse", {"lat": lat, "lon": lon, "zoom": 12})
+    name = item.get("display_name") if isinstance(item, dict) else None
+    return {"name": name}

@@ -33,7 +33,14 @@ export type RouteRequest = {
   region_id: string;
 };
 
-export type SceneInfo = { id: string; date: string; aoi_clear_pct: number };
+// A real Sentinel-2 acquisition: date/time are when the satellite took the image (UTC).
+export type SceneInfo = {
+  id: string;
+  date: string;
+  datetime?: string | null;
+  aoi_clear_pct: number;
+  mission?: string;
+};
 export type ScenarioStats = { threshold: number; polygons: number; area_km2: number };
 
 // An analysed area: a preset (e.g. Abbotsford) or one a user asked for.
@@ -54,24 +61,41 @@ export type Region = {
   default_end: LngLat | null;
   warnings: string[] | null;
   road_edges: number | null;
+  source?: string | null;
+};
+
+// Latest available observation vs. a chosen historical date (architecture.md §8b).
+export type ExplorationMode = "latest" | "historical";
+
+export type FloodAnalysisRequest = {
+  mode: ExplorationMode;
+  latitude: number;
+  longitude: number;
+  location_name: string;
+  // Historical mode only, YYYY-MM-DD.
+  requested_date?: string;
+};
+
+// Facts about one analysis request, returned with the finished job.
+export type AnalysisDetails = {
+  region_id: string;
+  mode?: ExplorationMode;
+  requested_date?: string | null;
+  observation_date?: string;
+  location?: { name: string; latitude: number; longitude: number };
+  note?: string | null;
 };
 
 // Background analysis of a new area (POST /api/analyze, then poll).
 export type Job = {
   id: string;
-  region_id: string;
+  region_id: string | null;
   name: string;
   status: "queued" | "running" | "done" | "error";
   stage: string;
   progress: number;
   error: string | null;
-};
-
-export type AnalyzeRequest = {
-  name: string;
-  bbox: BBox;
-  flood_dates: string;
-  preflood_dates?: string;
+  details: AnalysisDetails | null;
 };
 
 // Place search result (GET /api/geocode).
@@ -157,16 +181,22 @@ export function overlayUrl(regionId: string): string {
   return `/api/regions/${encodeURIComponent(regionId)}/overlay`;
 }
 
-export function startAnalysis(body: AnalyzeRequest): Promise<Job> {
-  return request<Job>("/api/analyze", post(body));
+export function startFloodAnalysis(body: FloodAnalysisRequest): Promise<Job> {
+  return request<Job>("/api/flood-analysis", post(body));
 }
 
-export function getJob(jobId: string): Promise<Job> {
-  return request<Job>(`/api/analyze/${encodeURIComponent(jobId)}`);
+export function getAnalysisJob(jobId: string): Promise<Job> {
+  return request<Job>(`/api/flood-analysis/${encodeURIComponent(jobId)}`);
 }
 
+// Geocoding endpoints: use lib/location.ts rather than calling these directly.
 export function searchPlaces(query: string): Promise<Place[]> {
   return request<Place[]>(`/api/geocode?q=${encodeURIComponent(query)}`);
+}
+
+export async function reverseGeocodeApi(latitude: number, longitude: number): Promise<string | null> {
+  const res = await request<{ name: string | null }>(`/api/geocode/reverse?lat=${latitude}&lon=${longitude}`);
+  return res.name;
 }
 
 // mock_route.json is the severe case (the file shared with Person 3).

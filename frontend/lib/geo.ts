@@ -8,18 +8,11 @@ const KM_PER_DEG_LAT = 111.32;
 
 const kmPerDegLng = (lat: number) => KM_PER_DEG_LAT * Math.cos((lat * Math.PI) / 180);
 
-// [width, height] of a box in km.
-export function sizeKm([w, s, e, n]: BBox): [number, number] {
-  return [(e - w) * kmPerDegLng((s + n) / 2), (n - s) * KM_PER_DEG_LAT];
-}
-
-// Shrink a box around its centre so neither side exceeds maxKm.
-export function clampBox(box: BBox, maxKm: number): BBox {
-  const [w, s, e, n] = box;
-  const [cx, cy] = [(w + e) / 2, (s + n) / 2];
-  const halfW = Math.min((e - w) / 2, maxKm / 2 / kmPerDegLng(cy));
-  const halfH = Math.min((n - s) / 2, maxKm / 2 / KM_PER_DEG_LAT);
-  return [cx - halfW, cy - halfH, cx + halfW, cy + halfH];
+// Square of sideKm around a point (preview of the area the backend will analyse).
+export function boxAround([lng, lat]: LngLat, sideKm: number): BBox {
+  const halfW = sideKm / 2 / kmPerDegLng(lat);
+  const halfH = sideKm / 2 / KM_PER_DEG_LAT;
+  return [lng - halfW, lat - halfH, lng + halfW, lat + halfH];
 }
 
 export function contains([w, s, e, n]: BBox, [lng, lat]: LngLat): boolean {

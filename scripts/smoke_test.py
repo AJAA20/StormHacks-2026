@@ -113,6 +113,46 @@ def test_live(base: str, timeout_s: int) -> None:
     check(again["status"] == "done" and again["stage"] == "Loaded from cache", "repeat request is instant (cache)")
 
 
+def poll(base: str, job: dict, timeout_s: int) -> dict:
+    t0, last = time.time(), None
+    while job["status"] in ("queued", "running") and time.time() - t0 < timeout_s:
+        if job["stage"] != last:
+            print(f"     [{job['progress']:4.0%}] {job['stage']}")
+            last = job["stage"]
+        time.sleep(1)
+        job = requests.get(f"{base}/api/flood-analysis/{job['id']}", timeout=10).json()
+    return job
+
+
+def test_modes(base: str, timeout_s: int) -> None:
+    print("\n4. Exploration modes (POST /api/flood-analysis)")
+    abbotsford = {"latitude": 49.045, "longitude": -122.20, "location_name": "Sumas Prairie, Abbotsford"}
+
+    job = poll(base, requests.post(f"{base}/api/flood-analysis", json=abbotsford | {
+        "mode": "historical", "requested_date": "2021-11-15"}, timeout=10).json(), timeout_s)
+    d = job.get("details") or {}
+    if check(job["status"] == "done", "historical: Abbotsford, requested 2021-11-15", job.get("error") or ""):
+        check(d.get("requested_date") == "2021-11-15" and d.get("observation_date") == "2021-11-21",
+              "requested date kept, real observation date reported", f"observed {d.get('observation_date')}")
+        check("nearest usable" in (d.get("note") or ""), "explains the nearest-observation substitution")
+        region = requests.get(f"{base}/api/regions/{job['region_id']}", timeout=10).json()
+        r = route(base, job["region_id"], [-122.219, 49.024], region["default_end"])
+        check(r.ok and r.json()["flooded_edges"] > 0, "historical route uses the 2021 flood",
+              f"{r.json().get('flooded_edges')} flooded roads" if r.ok else r.text[:100])
+
+    job = poll(base, requests.post(f"{base}/api/flood-analysis", json=abbotsford | {"mode": "latest"},
+                                   timeout=10).json(), timeout_s)
+    d = job.get("details") or {}
+    if check(job["status"] == "done", "latest: Abbotsford", job.get("error") or ""):
+        check(d.get("observation_date", "9999") <= time.strftime("%Y-%m-%d") and d.get("requested_date") is None,
+              "latest observation date is a real past acquisition", d.get("observation_date", ""))
+
+    job = poll(base, requests.post(f"{base}/api/flood-analysis", json={
+        "mode": "latest", "latitude": 0.0, "longitude": -140.0, "location_name": "Mid-Pacific"}, timeout=10).json(), timeout_s)
+    check(job["status"] == "error" and "No recent usable satellite observation" in (job.get("error") or ""),
+          "no imagery -> honest error, no fake data")
+
+
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--url", default="http://127.0.0.1:8000")
@@ -131,6 +171,7 @@ def main() -> int:
     test_presets(base)
     if not a.skip_live:
         test_live(base, a.timeout)
+        test_modes(base, a.timeout)
 
     print(f"\n{'ALL CHECKS PASSED' if not failures else f'{len(failures)} CHECK(S) FAILED: ' + ', '.join(failures)}")
     return 1 if failures else 0

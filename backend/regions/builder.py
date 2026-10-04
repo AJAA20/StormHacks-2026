@@ -19,6 +19,9 @@ MAX_SIDE_KM = 30.0  # keeps a build under ~1 minute and the road graph small
 MIN_SIDE_KM = 1.0
 MIN_CLEAR_PCT = 40.0  # flood scene must be at least this cloud-free over the area
 STAC_CACHE = Path(__file__).resolve().parents[2] / "data" / "raw" / "stac"
+# Where the imagery actually comes from (shown in the UI): ESA's Copernicus Sentinel-2,
+# Level-2A Collection 1, served by Element 84's Earth Search catalogue on AWS Open Data.
+SATELLITE_SOURCE = "Copernicus Sentinel-2 L2A via Earth Search (AWS Open Data)"
 
 Progress = Callable[[str, float], None]
 
@@ -76,8 +79,15 @@ def validate_request(bbox, flood_dates: str, preflood_dates: str | None) -> tupl
     return (w, s, e, n), flood_dates, preflood_dates
 
 
-def _scene_info(scene) -> dict:
-    return {"id": scene.id, "date": scene.date, "aoi_clear_pct": scene.aoi_clear_pct}
+def _scene_info(scene, item) -> dict:
+    """What we know about an image: real acquisition time (UTC), cloud-free share of the area."""
+    return {
+        "id": scene.id,
+        "date": scene.date,
+        "datetime": item.datetime.isoformat() if item.datetime else None,
+        "aoi_clear_pct": scene.aoi_clear_pct,
+        "mission": "Sentinel-2",
+    }
 
 
 def build_region(
@@ -90,9 +100,14 @@ def build_region(
     preset: bool = False,
     default_start=None,
     default_end=None,
+    flood_item=None,
 ) -> dict:
     """Build the region folder. Writes into a temp folder and renames at the end,
-    so a half-finished build is never visible to the API."""
+    so a half-finished build is never visible to the API.
+
+    flood_item: an already-chosen Sentinel-2 item (e.g. the latest or the nearest-to-a-date
+    observation, see observations.py). If None, the clearest image in flood_dates is used.
+    """
     # Heavy imports here so importing the API stays fast.
     import osmnx as ox
 
@@ -109,17 +124,18 @@ def build_region(
     warnings: list[str] = []
 
     try:
-        progress("Searching the Sentinel-2 archive", 0.05)
-        try:
-            flood_item, _ = find_best_scene(bbox, flood_dates, MIN_CLEAR_PCT)
-        except LookupError as exc:
-            raise RegionBuildError(f"No usable flood-date image: {exc}") from None
+        if flood_item is None:
+            progress("Searching the Sentinel-2 archive", 0.05)
+            try:
+                flood_item, _ = find_best_scene(bbox, flood_dates, MIN_CLEAR_PCT)
+            except LookupError as exc:
+                raise RegionBuildError(f"No usable flood-date image: {exc}") from None
 
         progress("Downloading flood-date imagery", 0.2)
         flood = download_scene(flood_item, bbox, STAC_CACHE)
 
         progress("Finding a dry-weather baseline image", 0.3)
-        pre = None
+        pre = pre_item = None
         try:
             pre_item, _ = find_best_scene(bbox, preflood_dates, MIN_CLEAR_PCT)
             pre = download_scene(pre_item, bbox, STAC_CACHE)
@@ -164,8 +180,8 @@ def build_region(
             "preset": preset,
             "flood_dates": flood_dates,
             "preflood_dates": preflood_dates,
-            "flood_scene": _scene_info(flood),
-            "preflood_scene": _scene_info(pre) if pre else None,
+            "flood_scene": _scene_info(flood, flood_item),
+            "preflood_scene": _scene_info(pre, pre_item) if pre else None,
             "scenarios": scenarios,
             "overlay_corners": corners,
             "default_start": list(default_start) if default_start else None,
@@ -173,7 +189,7 @@ def build_region(
             "road_edges": len(G.edges),
             "warnings": warnings,
             "created_at": time.time(),
-            "source": "Sentinel-2 L2A (Copernicus) via Earth Search; roads (c) OpenStreetMap",
+            "source": SATELLITE_SOURCE,
         }
         save_region(meta, tmp_dir)
 

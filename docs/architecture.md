@@ -648,6 +648,59 @@ All geographic coordinates sent through the API use:
 
 ---
 
+# 8b. Regions and Exploration Modes
+
+SatRelief is no longer limited to one predefined region. Every analysed area is a **region**
+(`backend/data/regions/<id>/`: `region.json`, `graph.graphml`, `flood/{low,moderate,severe}.geojson`,
+`overlay.webp`). Two examples are committed (Abbotsford 2021, Emilia-Romagna 2023); others are
+built on demand from the Sentinel-2 archive (Earth Search STAC) and OpenStreetMap, and cached.
+
+## Two user-facing modes, one pipeline
+
+```text
+          Search location  /  Use my location (browser, on click only)
+                         ↓
+                 Selected location (lat, lon)
+            ┌────────────┴────────────┐
+      Latest available            Historical (date)
+   newest usable image         usable image nearest the date
+            └────────────┬────────────┘
+             Sentinel-2 observation (real acquisition date/time)
+                         ↓
+   MNDWI → flood polygons → affected roads → graph update → A* route   (shared code)
+```
+
+The modes differ **only** in how the observation is chosen
+(`backend/regions/observations.py`, the FloodDataProvider):
+
+| Mode | Selection | Window |
+|---|---|---|
+| `latest` | newest image ≥ 40% cloud-free over the area | last 120 days |
+| `historical` | image ≥ 40% cloud-free closest to the requested date | ±21 days |
+
+Rules:
+
+* Satellite imagery is a snapshot, never "live". The UI always shows the real acquisition date/time (UTC).
+* A historical request shows **both** the requested date and the actual observation date.
+* No usable image → an error. Another place's or another time's data is never substituted.
+  If the archive is unreachable, only a cached analysis of the same area and period may be shown, with a note.
+* The area is a 12 km square around the point, or a committed example's area if the point lies inside it.
+* The user's browser location is only requested after clicking "Use my location".
+
+## API
+
+```text
+POST /api/flood-analysis   {mode, latitude, longitude, location_name, requested_date?}  → job
+GET  /api/flood-analysis/{job_id}   → {status, stage, progress, error, region_id,
+                                       details: {mode, requested_date, observation_date, location, note}}
+GET  /api/regions[/{id}[/overlay]]  → region metadata incl. flood_scene {date, datetime, aoi_clear_pct}
+POST /api/route                     → as §8, plus "region_id"
+GET  /api/geocode?q=  ·  GET /api/geocode/reverse?lat=&lon=   (OpenStreetMap Nominatim proxy)
+POST /api/analyze  {name, bbox, flood_dates}  → job   (lower-level: analyse an explicit box + date range)
+```
+
+---
+
 # 9. Component 4 — Frontend / Interactive Map
 
 ## Responsibility
