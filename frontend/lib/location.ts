@@ -12,6 +12,8 @@ export type SelectedLocation = {
   // "device": the user's own position from the browser; "search": a place they looked up.
   source: "search" | "device";
   bbox?: BBox;
+  // Geocoder place type for search results, e.g. "town" or "village".
+  kind?: string | null;
 };
 
 export async function searchLocation(query: string): Promise<SelectedLocation[]> {
@@ -22,6 +24,7 @@ export async function searchLocation(query: string): Promise<SelectedLocation[]>
     displayName: p.name,
     source: "search",
     bbox: p.bbox,
+    kind: p.kind ?? null,
   }));
 }
 
@@ -43,6 +46,15 @@ export async function locateUser(): Promise<SelectedLocation> {
     displayName: name ?? `Your location (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`,
     source: "device",
   };
+}
+
+// Where a search result is, for telling look-alike places apart: "town · Karditsa Regional Unit, Thessaly".
+export function placeContext(location: SelectedLocation): string {
+  const parts = location.displayName.split(",").map((p) => p.trim()).filter(Boolean);
+  // Skip the name itself, municipality-level repeats and postcodes; keep the next two areas.
+  const areas = parts.slice(1).filter((p) => !/^\d[\d\s-]*$/.test(p) && !p.startsWith(parts[0]));
+  const where = areas.slice(0, 2).join(", ");
+  return [location.kind, where].filter(Boolean).join(" · ");
 }
 
 // First part of a long geocoder name, e.g. "Abbotsford, Fraser Valley, BC, Canada" -> "Abbotsford, Fraser Valley".

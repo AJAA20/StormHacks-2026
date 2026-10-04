@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { locateUser, searchLocation, shortName, type SelectedLocation } from "@/lib/location";
+import { locateUser, placeContext, searchLocation, shortName, type SelectedLocation } from "@/lib/location";
 import styles from "./Controls.module.css";
 
 type Props = {
@@ -72,7 +72,10 @@ export default function LocationSelector({ value, onChange, disabled = false }: 
         <ul className={styles.results}>
           {results.map((r) => (
             <li key={`${r.displayName}-${r.latitude}-${r.longitude}`}>
-              <button type="button" className={styles.result} onClick={() => choose(r)}>{r.displayName}</button>
+              <button type="button" className={styles.result} onClick={() => choose(r)} title={r.displayName}>
+                <span className={styles.resultName}>{r.displayName.split(",")[0]}</span>
+                <span className={styles.resultContext}>{placeContext(r)}</span>
+              </button>
             </li>
           ))}
         </ul>
@@ -85,7 +88,8 @@ export default function LocationSelector({ value, onChange, disabled = false }: 
       {value && !error && (
         <p className={styles.meta}>
           {value.source === "device" ? "Your location: " : "Selected: "}
-          <strong>{shortName(value.displayName)}</strong>
+          <strong>{value.displayName.split(",")[0]}</strong>
+          {value.source === "search" && placeContext(value) && ` (${placeContext(value)})`}
         </p>
       )}
     </fieldset>

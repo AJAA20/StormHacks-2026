@@ -125,7 +125,10 @@ def _nominatim(path: str, params: dict) -> object:
         if wait > 0:
             time.sleep(wait)
         try:
-            r = requests.get(f"{NOMINATIM_BASE}/{path}", params={**params, "format": "jsonv2"},
+            # English names, so results are readable and look-alike places can be told apart
+            # (without this, e.g. Greek places come back in Greek script).
+            r = requests.get(f"{NOMINATIM_BASE}/{path}",
+                             params={**params, "format": "jsonv2", "accept-language": "en"},
                              headers={"User-Agent": USER_AGENT}, timeout=10)
             r.raise_for_status()
             return r.json()
@@ -145,6 +148,8 @@ def geocode(q: str):
         s, n, w, e = (float(v) for v in item["boundingbox"])
         results.append({
             "name": item["display_name"],
+            # e.g. "town", "village", "city", "administrative": helps pick the right "Palamas"
+            "kind": item.get("addresstype") or item.get("type"),
             "center": [float(item["lon"]), float(item["lat"])],
             "bbox": [w, s, e, n],
         })

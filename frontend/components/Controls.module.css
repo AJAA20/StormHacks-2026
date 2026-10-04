@@ -338,3 +338,15 @@
   line-height: 1.35;
   color: var(--ink-muted);
 }
+
+/* Search result: place name, then its type and region on a second line. */
+.resultName {
+  display: block;
+  font-weight: 700;
+}
+
+.resultContext {
+  display: block;
+  font-size: 12px;
+  color: var(--ink-muted);
+}

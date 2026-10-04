@@ -111,7 +111,7 @@ export type Job = {
 };
 
 // Place search result (GET /api/geocode).
-export type Place = { name: string; center: LngLat; bbox: BBox };
+export type Place = { name: string; kind?: string | null; center: LngLat; bbox: BBox };
 
 // Response from POST /api/route: §8 plus the fields proposed to Person 3
 // (start/end_coords, original_route_geojson, flooded_roads_geojson, and
