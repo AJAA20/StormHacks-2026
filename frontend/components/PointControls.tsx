@@ -13,8 +13,8 @@ type Props = {
 export default function PointControls({ mode, onModeChange, hasStart, hasEnd }: Props) {
   const toggle = (next: Exclude<PickMode, null>) => onModeChange(mode === next ? null : next);
   const hint =
-    mode === "start" ? "Click the map inside the dashed box to place the start."
-    : mode === "end" ? "Click the map inside the dashed box to place the destination."
+    mode === "start" ? "Click the map inside the analysed area to place the start."
+    : mode === "end" ? "Click the map inside the analysed area to place the destination."
     : !hasStart || !hasEnd ? "Place a start and a destination to plan an evacuation route."
     : "Drag the markers or use the buttons to move them.";
 

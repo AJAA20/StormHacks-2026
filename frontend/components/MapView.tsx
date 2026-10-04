@@ -37,6 +37,8 @@ import {
   type LngLat,
 } from "@/lib/config";
 import { clampBox, contains, sizeKm } from "@/lib/geo";
+import { MAP_COLORS } from "@/lib/theme";
+import styles from "./MapView.module.css";
 
 // Keep framed areas clear of the left control panel (280px + margins) on wide screens.
 function fitPadding(map: maplibregl.Map) {
@@ -55,7 +57,9 @@ export default function MapView() {
     floodedRoads: true,
     originalRoute: true,
     safeRoute: true,
-    satellite: true,
+    // Off by default: the 10 m image reads as a blurry box over the basemap.
+    // Tick it in the legend to show the flood-date observation.
+    satellite: false,
   });
 
   // Analysed areas (presets + user-analysed) and the one on screen.
@@ -226,7 +230,7 @@ export default function MapView() {
   const placePoint = useCallback((which: "start" | "end", point: LngLat) => {
     const current = regionRef.current;
     if (current && !contains(current.bbox, point)) {
-      setError("That point is outside the analysed area. Pick a point inside the dashed box.");
+      setError("That point is outside the analysed area, where there is no road or flood data.");
       return false;
     }
     setError(null);
@@ -274,19 +278,22 @@ export default function MapView() {
     map.addControl(new maplibregl.NavigationControl(), "top-right");
     map.addControl(new maplibregl.ScaleControl({ unit: "metric" }), "bottom-left");
 
-    // Draggable markers, added to the map once their point is set.
+    // Draggable markers, added to the map once their point is set. The label is
+    // part of the marker element, so it stays visible and moves with a drag.
     const makeMarker = (color: string, label: string, which: "start" | "end") => {
-      const marker = new maplibregl.Marker({ color, draggable: true })
-        .setLngLat(MAP_CENTER)
-        .setPopup(new maplibregl.Popup({ offset: 24 }).setText(label));
+      const marker = new maplibregl.Marker({ color, draggable: true }).setLngLat(MAP_CENTER);
+      const tag = document.createElement("span");
+      tag.className = styles.markerLabel;
+      tag.textContent = label;
+      marker.getElement().appendChild(tag);
       marker.on("dragend", () => {
         const { lng, lat } = marker.getLngLat();
         placePoint(which, [lng, lat]);
       });
       return marker;
     };
-    startMarker.current = makeMarker("#2563eb", "Start", "start");
-    endMarker.current = makeMarker("#16a34a", "Evacuation destination", "end");
+    startMarker.current = makeMarker(MAP_COLORS.startMarker, "Start", "start");
+    endMarker.current = makeMarker(MAP_COLORS.endMarker, "Evacuation point", "end");
 
     map.on("click", (e) => {
       const mode = pickRef.current;
@@ -365,8 +372,13 @@ export default function MapView() {
             corners={analyzing ? null : (region?.overlay_corners ?? null)}
             visible={visibility.satellite}
           />
-          <AreaBoxLayer map={map} id="region-bounds" box={analyzing ? null : (region?.bbox ?? null)} color="#e5e7eb" />
-          <AreaBoxLayer map={map} id="analysis-area" box={areaBox} color="#f97316" fillOpacity={0.08} />
+          <AreaBoxLayer
+            map={map}
+            id="analysis-area"
+            box={areaBox}
+            color={MAP_COLORS.analysisArea}
+            fillOpacity={0.08}
+          />
           <FloodLayer
             map={map}
             data={shown?.flood_polygons_geojson ?? null}
@@ -390,7 +402,18 @@ export default function MapView() {
           />
         </>
       )}
-      <StatusPanel data={shown} scenario={scenario} showMetrics={phase === "complete"}>
+      <StatusPanel
+        data={shown}
+        scenario={scenario}
+        showMetrics={phase === "complete"}
+        legend={
+          <LayerControls
+            visibility={visibility}
+            onToggle={toggleLayer}
+            routeCompromised={routeCompromised}
+          />
+        }
+      >
         {analyzing ? (
           <AnalyzeAreaPanel
             areaBox={areaBox}
@@ -427,11 +450,6 @@ export default function MapView() {
           </>
         )}
       </StatusPanel>
-      <LayerControls
-        visibility={visibility}
-        onToggle={toggleLayer}
-        routeCompromised={routeCompromised}
-      />
       <StatusBanner loading={loading} error={error ?? routeError} onRetry={retry} />
     </>
   );

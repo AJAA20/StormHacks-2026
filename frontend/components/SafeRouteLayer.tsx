@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import type { GeoJSONSource, Map } from "maplibre-gl";
 import { EMPTY_COLLECTION, type RouteFeature } from "@/lib/api";
 import { LAYER_SLOTS } from "@/lib/config";
+import { MAP_COLORS } from "@/lib/theme";
 
 const SOURCE_ID = "safe-route";
 // Layer ids, bottom to top.
@@ -33,7 +34,7 @@ export default function SafeRouteLayer({ map, data, visible }: Props) {
         type: "line",
         source: SOURCE_ID,
         layout: { "line-join": "round", "line-cap": "round" },
-        paint: { "line-color": "#052e16", "line-width": 9, "line-opacity": 0.6 },
+        paint: { "line-color": MAP_COLORS.safeRouteCasing, "line-width": 9, "line-opacity": 0.7 },
       },
       LAYER_SLOTS.safeRoute,
     );
@@ -43,7 +44,7 @@ export default function SafeRouteLayer({ map, data, visible }: Props) {
         type: "line",
         source: SOURCE_ID,
         layout: { "line-join": "round", "line-cap": "round" },
-        paint: { "line-color": "#22c55e", "line-width": 5 },
+        paint: { "line-color": MAP_COLORS.safeRoute, "line-width": 5 },
       },
       LAYER_SLOTS.safeRoute,
     );

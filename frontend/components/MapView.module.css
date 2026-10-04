@@ -1,0 +1,14 @@
+/* Label inside the marker element, to the right of the pin. */
+.markerLabel {
+  position: absolute;
+  top: 4px;
+  left: 30px;
+  padding: 2px 6px;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  pointer-events: none;
+}

@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import type { GeoJSONSource, Map } from "maplibre-gl";
 import { EMPTY_COLLECTION, type FloodedRoads } from "@/lib/api";
 import { LAYER_SLOTS } from "@/lib/config";
+import { MAP_COLORS } from "@/lib/theme";
 
 const SOURCE_ID = "flooded-roads";
 // Layer ids, bottom to top.
@@ -33,7 +34,7 @@ export default function FloodedRoadLayer({ map, data, visible }: Props) {
         type: "line",
         source: SOURCE_ID,
         layout: { "line-join": "round", "line-cap": "round" },
-        paint: { "line-color": "#ef4444", "line-width": 5 },
+        paint: { "line-color": MAP_COLORS.floodedRoad, "line-width": 4 },
       },
       LAYER_SLOTS.floodedRoads,
     );

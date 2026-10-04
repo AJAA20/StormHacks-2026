@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import type { GeoJSONSource, Map } from "maplibre-gl";
 import { EMPTY_COLLECTION, type RouteFeature } from "@/lib/api";
 import { LAYER_SLOTS } from "@/lib/config";
+import { MAP_COLORS } from "@/lib/theme";
 
 const SOURCE_ID = "original-route";
 // Layer ids, bottom to top.
@@ -14,15 +15,15 @@ type Props = {
   // null draws nothing (field missing from the response).
   data: RouteFeature | null;
   visible: boolean;
-  // false: the active route before analysis (solid). true: blocked by flooding (grey dashed).
+  // false: the active route before analysis (solid orange). true: blocked by flooding (grey dashed).
   compromised: boolean;
 };
 
-const CURRENT_COLOR = "#38bdf8";
-const COMPROMISED_COLOR = "#d1d5db";
 const COMPROMISED_DASH = [2, 1.5];
+// An explicit solid pattern: resetting the dash to undefined is not reliably applied.
+const SOLID = [1, 0];
 
-// Pre-flood route: solid blue while it is the current route, dashed grey once
+// Pre-flood route: solid orange while it is the current route, dashed grey once
 // flooding makes it unsafe (architecture.md §9). A dark casing underneath
 // keeps it legible over satellite imagery.
 export default function OriginalRouteLayer({ map, data, visible, compromised }: Props) {
@@ -41,7 +42,7 @@ export default function OriginalRouteLayer({ map, data, visible, compromised }: 
         type: "line",
         source: SOURCE_ID,
         layout: { "line-join": "round", "line-cap": "round" },
-        paint: { "line-color": "#111827", "line-width": 7, "line-opacity": 0.6 },
+        paint: { "line-color": MAP_COLORS.routeCasing, "line-width": 7, "line-opacity": 0.6 },
       },
       LAYER_SLOTS.route,
     );
@@ -51,7 +52,7 @@ export default function OriginalRouteLayer({ map, data, visible, compromised }: 
         type: "line",
         source: SOURCE_ID,
         layout: { "line-join": "round" },
-        paint: { "line-color": CURRENT_COLOR, "line-width": 4 },
+        paint: { "line-color": MAP_COLORS.routeCurrent, "line-width": 4, "line-dasharray": SOLID },
       },
       LAYER_SLOTS.route,
     );
@@ -59,9 +60,8 @@ export default function OriginalRouteLayer({ map, data, visible, compromised }: 
 
   useEffect(() => {
     const line = LAYER_IDS[1];
-    map.setPaintProperty(line, "line-color", compromised ? COMPROMISED_COLOR : CURRENT_COLOR);
-    // undefined resets to the default solid line.
-    map.setPaintProperty(line, "line-dasharray", compromised ? COMPROMISED_DASH : undefined);
+    map.setPaintProperty(line, "line-color", compromised ? MAP_COLORS.routeBlocked : MAP_COLORS.routeCurrent);
+    map.setPaintProperty(line, "line-dasharray", compromised ? COMPROMISED_DASH : SOLID);
   }, [map, compromised]);
 
   useEffect(() => {

@@ -27,7 +27,7 @@ export function buildSteps(r: RouteResponse): AnalysisStep[] {
   const affected = isRouteAffected(r);
 
   const steps: AnalysisStep[] = [
-    { label: "Analysing Sentinel-2 imagery", detail: null, reveals: null, durationMs: 1400 },
+    { label: "Loading Sentinel-2 flood extent", detail: null, reveals: null, durationMs: 1400 },
     {
       label: "Flood detected",
       detail: floodAreas === null ? null : plural(floodAreas, "flood area"),

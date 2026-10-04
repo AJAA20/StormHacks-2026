@@ -12,46 +12,51 @@ type Props = {
   onRun: () => void;
 };
 
-// "Run analysis" button, then the step-by-step progress of the sequence.
+// "Run analysis" button, the step-by-step progress, then a one-line summary.
 export default function AnalysisSteps({ phase, steps, current, canRun, onRun }: Props) {
   if (phase === "before") {
     return (
-      <div className={styles.intro}>
+      <>
         <p className={styles.text}>
-          Current evacuation route shown. Check it against satellite flood observations.
+          Showing the normal route to the evacuation point. Run the analysis to check it against
+          the flood extent.
         </p>
         <button type="button" className={styles.run} onClick={onRun} disabled={!canRun}>
           Run analysis
         </button>
-      </div>
+      </>
+    );
+  }
+
+  if (phase === "complete") {
+    return (
+      <p className={styles.summary}>
+        <span>Analysis complete</span>
+        <button type="button" className={styles.replay} onClick={onRun} disabled={!canRun}>
+          Replay
+        </button>
+      </p>
     );
   }
 
   return (
-    <div className={styles.wrapper}>
-      <ol className={styles.steps}>
-        {steps.map((step, i) => {
-          const state = phase === "complete" || i < current ? "done" : i === current ? "active" : "pending";
-          return (
-            <li key={step.label} className={styles[state]}>
-              <span className={styles.icon} aria-hidden="true">
-                {state === "done" ? "✓" : ""}
-              </span>
-              <span>
-                <span className={styles.label}>{step.label}</span>
-                {step.detail && state !== "pending" && (
-                  <span className={styles.detail}>{step.detail}</span>
-                )}
-              </span>
-            </li>
-          );
-        })}
-      </ol>
-      {phase === "complete" && (
-        <button type="button" className={styles.replay} onClick={onRun} disabled={!canRun}>
-          Replay analysis
-        </button>
-      )}
-    </div>
+    <ol className={styles.steps}>
+      {steps.map((step, i) => {
+        const state = i < current ? "done" : i === current ? "active" : "pending";
+        return (
+          <li key={step.label} className={styles[state]}>
+            <span className={styles.icon} aria-hidden="true">
+              {state === "done" ? "✓" : ""}
+            </span>
+            <span>
+              {step.label}
+              {step.detail && state !== "pending" && (
+                <span className={styles.detail}>{step.detail}</span>
+              )}
+            </span>
+          </li>
+        );
+      })}
+    </ol>
   );
 }

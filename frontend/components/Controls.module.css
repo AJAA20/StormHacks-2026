@@ -1,77 +1,72 @@
-/* Shared styles for the left-panel controls (area, route points, new-area form). */
+/* Shared styles for the sheet's controls (area, route points, new-area form).
+   Matches the paper map sheet: ink borders, square corners, sentence-case labels. */
 
 .section {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .label {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #9ca3af;
+  font-size: 15px;
+  font-weight: 700;
 }
 
 .heading {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 700;
 }
 
 .headingRow {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
 }
 
 .meta {
-  font-size: 12px;
-  line-height: 1.4;
-  color: #94a3b8;
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--ink-muted);
 }
 
 .warning {
-  font-size: 12px;
-  line-height: 1.4;
-  color: #fbbf24;
+  padding-left: 8px;
+  border-left: 3px solid #b15928;
+  font-size: 13px;
+  line-height: 1.35;
+  color: #7a3d14;
 }
 
 .error {
-  padding: 8px 10px;
-  border-radius: 6px;
-  background: rgba(127, 29, 29, 0.6);
-  font-size: 12px;
-  line-height: 1.4;
-  color: #fecaca;
+  padding: 6px 8px;
+  border-left: 4px solid var(--alert);
+  background: #f6e7e5;
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--alert);
 }
 
 .select,
 .input {
   width: 100%;
-  padding: 7px 8px;
-  border: 1px solid rgba(148, 163, 184, 0.3);
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.06);
-  color: #e5e7eb;
+  padding: 6px 8px;
+  border: 1px solid var(--ink);
+  border-radius: 0;
+  background: #fff;
+  color: var(--ink);
   font: inherit;
-  font-size: 13px;
-}
-
-.select option,
-.select optgroup {
-  background: #0f172a;
+  font-size: 14px;
 }
 
 .input::placeholder {
-  color: #64748b;
+  color: #9a968c;
 }
 
 .input:focus,
 .select:focus {
-  outline: 2px solid #3b82f6;
-  outline-offset: -1px;
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
 }
 
 .fieldset {
@@ -101,25 +96,30 @@
   flex-direction: column;
   max-height: 140px;
   overflow-y: auto;
-  border: 1px solid rgba(148, 163, 184, 0.25);
-  border-radius: 6px;
+  border: 1px solid var(--ink);
+  background: #fff;
   list-style: none;
 }
 
 .result {
   width: 100%;
-  padding: 6px 8px;
+  padding: 5px 8px;
   border: none;
   background: transparent;
-  color: #e5e7eb;
+  color: var(--ink);
   font: inherit;
-  font-size: 12px;
+  font-size: 13px;
   text-align: left;
   cursor: pointer;
 }
 
+.result + .result,
+.results li + li {
+  border-top: 1px solid var(--hairline);
+}
+
 .result:hover {
-  background: rgba(59, 130, 246, 0.25);
+  background: #ece9e0;
 }
 
 .primary,
@@ -127,40 +127,42 @@
 .small,
 .pick,
 .pickActive {
-  border: none;
-  border-radius: 6px;
+  border: 1px solid var(--ink);
+  border-radius: 0;
   font: inherit;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
 }
 
 .primary {
-  padding: 9px 0;
-  background: #3b82f6;
-  color: #fff;
-  font-size: 14px;
+  padding: 8px 0;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 15px;
 }
 
 .primary:hover:not(:disabled) {
-  background: #2563eb;
+  background: #000;
 }
 
 .secondary {
-  padding: 7px 0;
-  background: rgba(255, 255, 255, 0.08);
-  color: #e5e7eb;
-  font-size: 13px;
+  padding: 6px 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: 14px;
 }
 
-.secondary:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.14);
+.secondary:hover:not(:disabled),
+.small:hover:not(:disabled),
+.pick:hover {
+  background: #ece9e0;
 }
 
 .small {
   padding: 0 10px;
-  background: rgba(255, 255, 255, 0.1);
-  color: #e5e7eb;
-  font-size: 12px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 13px;
 }
 
 .pick,
@@ -169,24 +171,21 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 7px 4px;
-  font-size: 12px;
+  padding: 6px 4px;
+  font-size: 13px;
 }
 
 .pick {
-  background: rgba(255, 255, 255, 0.06);
-  color: #cbd5e1;
-}
-
-.pick:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: transparent;
+  color: var(--ink);
 }
 
 .pickActive {
-  background: #f97316;
-  color: #fff;
+  background: var(--ink);
+  color: var(--paper);
 }
 
+/* Same colours as the map markers (lib/theme.ts). */
 .dotStart,
 .dotEnd {
   width: 9px;
@@ -195,11 +194,11 @@
 }
 
 .dotStart {
-  background: #2563eb;
+  background: #6a3d9a;
 }
 
 .dotEnd {
-  background: #16a34a;
+  background: #33a02c;
 }
 
 .link {
@@ -207,9 +206,10 @@
   padding: 0;
   border: none;
   background: none;
-  color: #93c5fd;
+  color: var(--ink);
   font: inherit;
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: 600;
   text-decoration: underline;
   cursor: pointer;
 }
@@ -218,7 +218,7 @@
 .secondary:disabled,
 .small:disabled,
 .link:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: not-allowed;
 }
 
@@ -231,13 +231,13 @@
 .progressBar {
   height: 6px;
   overflow: hidden;
-  border-radius: 3px;
-  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--ink);
+  background: #fff;
 }
 
 .progressBar span {
   display: block;
   height: 100%;
-  background: #f97316;
+  background: var(--ink);
   transition: width 0.4s ease;
 }

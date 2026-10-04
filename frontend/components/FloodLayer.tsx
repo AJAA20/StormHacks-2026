@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import type { GeoJSONSource, Map } from "maplibre-gl";
 import { EMPTY_COLLECTION, type FloodPolygons } from "@/lib/api";
 import { LAYER_SLOTS } from "@/lib/config";
+import { MAP_COLORS } from "@/lib/theme";
 
 const SOURCE_ID = "flood";
 // Layer ids, bottom to top.
@@ -32,7 +33,7 @@ export default function FloodLayer({ map, data, visible }: Props) {
         id: LAYER_IDS[0],
         type: "fill",
         source: SOURCE_ID,
-        paint: { "fill-color": "#3b82f6", "fill-opacity": 0.45 },
+        paint: { "fill-color": MAP_COLORS.floodFill, "fill-opacity": MAP_COLORS.floodFillOpacity },
       },
       LAYER_SLOTS.flood,
     );
@@ -41,7 +42,7 @@ export default function FloodLayer({ map, data, visible }: Props) {
         id: LAYER_IDS[1],
         type: "line",
         source: SOURCE_ID,
-        paint: { "line-color": "#93c5fd", "line-width": 2 },
+        paint: { "line-color": MAP_COLORS.floodEdge, "line-width": 1.5 },
       },
       LAYER_SLOTS.flood,
     );

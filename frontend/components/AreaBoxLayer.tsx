@@ -8,7 +8,7 @@ import { boxPolygon } from "@/lib/geo";
 
 type Props = {
   map: Map;
-  // Unique per box, e.g. "region-bounds" or "analysis-area".
+  // Unique per box, e.g. "analysis-area".
   id: string;
   box: BBox | null;
   color: string;
