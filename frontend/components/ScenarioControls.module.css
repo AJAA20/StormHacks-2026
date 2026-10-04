@@ -1,36 +1,45 @@
+.label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
 .group {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
-  padding: 4px;
-  margin-bottom: 14px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.05);
+  margin-bottom: 12px;
+  border: 1px solid var(--ink);
 }
 
 .option,
 .active {
   padding: 6px 0;
   border: none;
-  border-radius: 6px;
   font: inherit;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
 }
 
-.option {
-  background: transparent;
-  color: #9ca3af;
+.option + .option,
+.option + .active,
+.active + .option {
+  border-left: 1px solid var(--ink);
 }
 
-.option:hover {
-  color: #e5e7eb;
+.option {
+  background: transparent;
+  color: var(--ink);
+}
+
+.option:hover:not(:disabled) {
+  background: #ece9e0;
 }
 
 .active {
-  background: #3b82f6;
-  color: #fff;
+  background: var(--ink);
+  color: var(--paper);
 }
 
 .option:disabled,
@@ -40,6 +49,6 @@
 
 /* Dims only if the request takes longer than 300 ms, so fast loads don't flicker. */
 .option:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   transition: opacity 0.2s 0.3s;
 }

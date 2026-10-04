@@ -14,7 +14,10 @@ import StatusBanner from "./StatusBanner";
 import StatusPanel from "./StatusPanel";
 import { buildSteps, isRouteAffected, type AnalysisStep, type Reveal } from "@/lib/analysis";
 import { getRoute, type RouteResponse, type Scenario } from "@/lib/api";
+import { MAP_COLORS } from "@/lib/theme";
+import styles from "./MapView.module.css";
 import {
+  type LngLat,
   END_COORDS,
   LAYER_SLOTS,
   MAP_CENTER,
@@ -150,15 +153,8 @@ export default function MapView() {
     map.addControl(new maplibregl.NavigationControl(), "top-right");
     map.addControl(new maplibregl.ScaleControl({ unit: "metric" }), "bottom-left");
 
-    new maplibregl.Marker({ color: "#2563eb" })
-      .setLngLat(START_COORDS)
-      .setPopup(new maplibregl.Popup({ offset: 24 }).setText("Start"))
-      .addTo(map);
-
-    new maplibregl.Marker({ color: "#16a34a" })
-      .setLngLat(END_COORDS)
-      .setPopup(new maplibregl.Popup({ offset: 24 }).setText("Evacuation destination"))
-      .addTo(map);
+    addLabelledMarker(map, START_COORDS, MAP_COLORS.startMarker, "Start");
+    addLabelledMarker(map, END_COORDS, MAP_COLORS.endMarker, "Evacuation point");
 
     map.on("load", () => setMap(map));
 
@@ -196,28 +192,45 @@ export default function MapView() {
           />
         </>
       )}
-      {route && (
-        <StatusPanel data={route} showMetrics={phase === "complete"}>
-          <ScenarioControls
-            value={scenario}
-            onChange={selectScenario}
-            disabled={loading || phase === "analysing"}
+      <StatusPanel
+        scenario={scenario}
+        data={route}
+        showMetrics={phase === "complete"}
+        legend={
+          <LayerControls
+            visibility={visibility}
+            onToggle={toggleLayer}
+            routeCompromised={routeCompromised}
           />
-          <AnalysisSteps
-            phase={phase}
-            steps={phase === "complete" ? buildSteps(route) : steps}
-            current={stepIndex}
-            canRun={!loading}
-            onRun={runAnalysis}
-          />
-        </StatusPanel>
-      )}
-      <LayerControls
-        visibility={visibility}
-        onToggle={toggleLayer}
-        routeCompromised={routeCompromised}
-      />
+        }
+      >
+        <ScenarioControls
+          value={scenario}
+          onChange={selectScenario}
+          disabled={loading || phase === "analysing"}
+        />
+        <AnalysisSteps
+          phase={phase}
+          steps={steps}
+          current={stepIndex}
+          canRun={route !== null && !loading}
+          onRun={runAnalysis}
+        />
+      </StatusPanel>
       <StatusBanner loading={loading} error={error} onRetry={retry} />
     </>
   );
+}
+
+// A pin plus an always-visible label beside it, so start and destination
+// are identifiable without clicking.
+function addLabelledMarker(map: maplibregl.Map, at: LngLat, color: string, text: string) {
+  new maplibregl.Marker({ color }).setLngLat(at).addTo(map);
+
+  const label = document.createElement("div");
+  label.className = styles.markerLabel;
+  label.textContent = text;
+  new maplibregl.Marker({ element: label, anchor: "left", offset: [14, -20] })
+    .setLngLat(at)
+    .addTo(map);
 }

@@ -1,6 +1,14 @@
 :root {
   --background: #0a0a0a;
   --foreground: #ededed;
+
+  /* Map sheet: printed rapid-mapping product look. */
+  --paper: #fbfaf6;
+  --ink: #1d2327;
+  --ink-muted: #5c656c;
+  --hairline: #d9d5ca;
+  --alert: #b3261e;
+  --ok: #2b7a22;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -26,8 +34,8 @@ body {
   flex-direction: column;
   color: var(--foreground);
   background: var(--background);
-  /* System fonts only: nothing is downloaded, so builds work offline. */
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  /* Dosis is bundled via @fontsource-variable/dosis (see layout.tsx). */
+  font-family: "Dosis Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

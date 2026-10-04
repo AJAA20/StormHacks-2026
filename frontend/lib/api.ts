@@ -53,7 +53,7 @@ export type RouteResponse = {
 export const EMPTY_COLLECTION: FeatureCollection = { type: "FeatureCollection", features: [] };
 
 // Defaults to mock data; set NEXT_PUBLIC_USE_MOCK=false to call FastAPI.
-const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK !== "false";
+export const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK !== "false";
 
 // mock_route.json is the severe case (the file shared with Person 3).
 const MOCK_ROUTE_URLS: Record<Scenario, string> = {

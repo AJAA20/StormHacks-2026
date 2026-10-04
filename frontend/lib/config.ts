@@ -28,3 +28,8 @@ export const LAYER_SLOTS = {
   floodedRoads: "slot-flooded-roads",
   safeRoute: "slot-safe-route",
 } as const;
+
+// Shown in the map's title block. The imagery line is only shown when the app
+// is running on the backend's satellite-derived data, not on mock files.
+export const DEMO_PLACE = "Sumas Prairie, Abbotsford, BC";
+export const IMAGERY_SOURCE = "Sentinel-2 MNDWI, Nov–Dec 2021";

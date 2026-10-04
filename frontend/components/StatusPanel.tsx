@@ -1,71 +1,82 @@
 import type { ReactNode } from "react";
-import type { RouteResponse } from "@/lib/api";
+import { USE_MOCK, type RouteResponse, type Scenario } from "@/lib/api";
+import { DEMO_PLACE, IMAGERY_SOURCE } from "@/lib/config";
 import styles from "./StatusPanel.module.css";
 
 type Props = {
-  data: RouteResponse;
-  // Controls shown under the header, e.g. the scenario selector.
-  children?: ReactNode;
+  scenario: Scenario;
+  // null until the first route response arrives.
+  data: RouteResponse | null;
   // Hidden until the analysis has run.
-  showMetrics?: boolean;
+  showMetrics: boolean;
+  // Scenario selector and analysis controls.
+  children?: ReactNode;
+  legend: ReactNode;
 };
 
-// Route metrics from the /api/route response (architecture.md §9).
-export default function StatusPanel({ data, children, showMetrics = true }: Props) {
-  const isSafe = data.route_found && data.route_status === "safe";
-  // Only claim a reroute when the response confirms one.
-  const rerouted = (data.detour_added_km ?? 0) > 0 || (data.flooded_edges_avoided ?? 0) > 0;
-  const statusLabel = !data.route_found
-    ? "NO SAFE ROUTE"
-    : isSafe && rerouted
-      ? "REROUTED"
-      : (data.route_status ?? "route found").replace(/_/g, " ").toUpperCase();
-
+// The map sheet: title block, controls, route metrics (architecture.md §9) and legend.
+export default function StatusPanel({ scenario, data, showMetrics, children, legend }: Props) {
   return (
-    <aside className={styles.panel}>
-      <header className={styles.header}>
-        <h1 className={styles.title}>SatRelief</h1>
-        <p className={styles.scenario}>{data.scenario} flood scenario</p>
+    <aside className={styles.sheet}>
+      <header className={styles.section}>
+        <p className={styles.brand}>SatRelief</p>
+        <h1 className={styles.title}>Flood evacuation map</h1>
+        <p className={styles.meta}>{DEMO_PLACE}</p>
+        <p className={styles.meta}>
+          {USE_MOCK ? "Mock data, not satellite-derived" : IMAGERY_SOURCE} ·{" "}
+          <span className={styles.scenario}>{scenario}</span> scenario
+        </p>
       </header>
 
-      {children}
+      <div className={styles.section}>{children}</div>
 
-      {showMetrics && (
-        <>
-          <div className={styles.status}>
-            <span className={styles.label}>Route status</span>
-            <span className={isSafe ? styles.safe : styles.unsafe}>{statusLabel}</span>
+      {showMetrics && data && (
+        <dl className={`${styles.section} ${styles.rows}`}>
+          <div className={styles.row}>
+            <dt>Route</dt>
+            <dd className={statusClass(data)}>{statusText(data)}</dd>
           </div>
-
-          <dl className={styles.metrics}>
-            <div>
-              <dt className={styles.label}>Distance</dt>
-              <dd className={styles.value}>{km(data.distance_km)}</dd>
-            </div>
-            <div>
-              <dt className={styles.label}>Detour added</dt>
-              <dd className={styles.value}>{detour(data.detour_added_km)}</dd>
-            </div>
-            <div>
-              <dt className={styles.label}>Flooded roads</dt>
-              <dd className={styles.value}>{data.flooded_edges ?? "—"}</dd>
-            </div>
-            <div>
-              <dt className={styles.label}>Roads avoided</dt>
-              <dd className={styles.value}>{data.flooded_edges_avoided ?? "—"}</dd>
-            </div>
-          </dl>
-        </>
+          <div className={styles.row}>
+            <dt>Distance</dt>
+            <dd>{km(data.distance_km)}</dd>
+          </div>
+          <div className={styles.row}>
+            <dt>Detour</dt>
+            <dd>{data.detour_added_km === 0 ? "None" : km(data.detour_added_km, "+")}</dd>
+          </div>
+          <div className={styles.row}>
+            <dt>Flooded roads</dt>
+            <dd>{data.flooded_edges ?? "—"}</dd>
+          </div>
+          <div className={styles.row}>
+            <dt>On original route</dt>
+            <dd>{data.flooded_edges_avoided ?? "—"}</dd>
+          </div>
+        </dl>
       )}
+
+      <div className={styles.section}>{legend}</div>
     </aside>
   );
+}
+
+// Only claim a reroute when the response confirms one.
+function isRerouted(d: RouteResponse) {
+  return (d.detour_added_km ?? 0) > 0 || (d.flooded_edges_avoided ?? 0) > 0;
+}
+
+function statusText(d: RouteResponse) {
+  if (!d.route_found) return "No safe route";
+  if (d.route_status === "safe") return isRerouted(d) ? "Rerouted" : "Safe";
+  const s = (d.route_status ?? "route found").replace(/_/g, " ");
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function statusClass(d: RouteResponse) {
+  return d.route_found && d.route_status === "safe" ? styles.ok : styles.alert;
 }
 
 // Missing values show as a dash rather than breaking the panel.
 function km(value: number | null, prefix = "") {
   return value === null ? "—" : `${prefix}${value.toFixed(1)} km`;
-}
-
-function detour(value: number | null) {
-  return value === 0 ? "None" : km(value, "+");
 }

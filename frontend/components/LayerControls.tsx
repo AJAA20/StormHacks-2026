@@ -1,15 +1,11 @@
+import type { CSSProperties } from "react";
+import { MAP_COLORS } from "@/lib/theme";
 import styles from "./LayerControls.module.css";
 
 export type LayerKey = "flood" | "floodedRoads" | "originalRoute" | "safeRoute";
 export type LayerVisibility = Record<LayerKey, boolean>;
 
-// Top to bottom in the panel; swatches mirror each layer's map styling.
-const LAYERS: { key: LayerKey; label: string; swatch: string }[] = [
-  { key: "safeRoute", label: "Safe evacuation route", swatch: styles.swatchSafe },
-  { key: "originalRoute", label: "Original route", swatch: styles.swatchOriginal },
-  { key: "floodedRoads", label: "Flooded roads", swatch: styles.swatchFloodedRoads },
-  { key: "flood", label: "Flood area (Sentinel-2)", swatch: styles.swatchFlood },
-];
+const line = (color: string): CSSProperties => ({ height: 4, background: color });
 
 type Props = {
   visibility: LayerVisibility;
@@ -18,28 +14,51 @@ type Props = {
   routeCompromised: boolean;
 };
 
-// Legend that doubles as layer toggles.
+// Map legend that doubles as layer toggles. Swatches use the map's own colours.
 export default function LayerControls({ visibility, onToggle, routeCompromised }: Props) {
+  const rows: { key: LayerKey; label: string; swatch: CSSProperties }[] = [
+    { key: "safeRoute", label: "Evacuation route", swatch: line(MAP_COLORS.safeRoute) },
+    routeCompromised
+      ? {
+          key: "originalRoute",
+          label: "Original route (blocked)",
+          // Light dashes over the dark casing, as drawn on the map.
+          swatch: {
+            height: 5,
+            background: `repeating-linear-gradient(90deg, ${MAP_COLORS.routeBlocked} 0 6px, ${MAP_COLORS.routeCasing} 6px 10px)`,
+          },
+        }
+      : { key: "originalRoute", label: "Current route", swatch: line(MAP_COLORS.routeCurrent) },
+    { key: "floodedRoads", label: "Flooded road", swatch: line(MAP_COLORS.floodedRoad) },
+    {
+      key: "flood",
+      label: "Flood extent",
+      swatch: {
+        height: 12,
+        border: `1.5px solid ${MAP_COLORS.floodEdge}`,
+        background: MAP_COLORS.floodFill,
+        opacity: 0.85,
+      },
+    },
+  ];
+
   return (
-    <section className={styles.panel}>
-      <h2 className={styles.title}>Map layers</h2>
+    <section>
+      <h2 className={styles.title}>Legend</h2>
       <ul className={styles.list}>
-        {LAYERS.map(({ key, label, swatch }) => {
-          const current = key === "originalRoute" && !routeCompromised;
-          return (
-            <li key={key}>
-              <label className={styles.row}>
-                <input
-                  type="checkbox"
-                  checked={visibility[key]}
-                  onChange={() => onToggle(key)}
-                />
-                <span className={`${styles.swatch} ${current ? styles.swatchCurrent : swatch}`} />
-                <span>{current ? "Current route" : label}</span>
-              </label>
-            </li>
-          );
-        })}
+        {rows.map(({ key, label, swatch }) => (
+          <li key={key}>
+            <label className={styles.row}>
+              <input
+                type="checkbox"
+                checked={visibility[key]}
+                onChange={() => onToggle(key)}
+              />
+              <span className={styles.swatch} style={swatch} />
+              <span>{label}</span>
+            </label>
+          </li>
+        ))}
       </ul>
     </section>
   );

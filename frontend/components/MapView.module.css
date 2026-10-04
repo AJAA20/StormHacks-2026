@@ -1,0 +1,10 @@
+.markerLabel {
+  padding: 2px 6px;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  pointer-events: none;
+}
